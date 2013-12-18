@@ -1,77 +1,67 @@
 #! /usr/bin/env python
-
 import sys
 import os
 import re
 import curses
-
 stdscr = curses.initscr()
 height,width = stdscr.getmaxyx()
-rooms = {}
-
-def open_room(r,old_r):
-
-  if old_r != '':
-    log = open(sys.path[0]+'/house/'+old_r+'/map','w')
-    log.write(str(ypos)+','+str(xpos)+'\n')
-    for j in range(1,len(script)):
-      log.write(script[j])
-    log.close()
-    del textarea
-
-  old_r = r
-  
-  config = open(sys.path[0]+'/house/'+r+'/map')
-  script = config.readlines()
-  config.close()
-  
-  coords = script[0].split(',')
-  ypos,xpos = int(coords[0]),int(coords[1])
-
-  psize = script[1].split(',')
-  h,w = int(psize[0]),int(psize[1])
-  
-  textarea = curses.newpad(h,w)
-
-  for i in range(2,len(script)):
-    line = script[i].split('/')
-    y,x = int(line[0].split(',')[0]),int(line[0].split(',')[1])
-    house = os.listdir(sys.path[0]+'/house/')
-    words = line[1].split(' ')
-    specials = []
-    for j in words:
+ypos,xpos = 0,0
+run = False
+class room:
+  def __init__(self):
+    self.current = ''
+    self.script = []
+  def open_room(self,name):
+    global run,ypos,xpos
+    run = False
+    if name != self.current and self.current != '':
+      log = open(sys.path[0]+'/house/'+self.current+'/map','w')
+      log.write(str(ypos)+','+str(xpos)+'\n')
+      for j in range(1,len(self.script)): log.write(self.script[j])
+      log.close()
+      del self.textarea
+      stdscr.clear()
+      stdscr.refresh()
+    self.current = name
+    config = open(sys.path[0]+'/house/'+name+'/map')
+    self.script = config.readlines()
+    config.close()
+    coords = self.script[0].split(',')
+    ypos,xpos = int(coords[0]),int(coords[1])
+    size = self.script[1].split(',')
+    self.textarea = curses.newpad(int(size[0]),int(size[1]))
+    for i in range(2,len(self.script)):
+      line = self.script[i].split('/')
+      lcoords = line[0].split(',')
+      y,x = int(lcoords[0]),int(lcoords[1])
+      words = line[1].rstrip().split(' ')
+      house = os.listdir(sys.path[0]+'/house/')
+      specials = []
       for names in house:
-        if str(names) == j: specials.append(str(names))
-    fragments = re.split("|".join(specials),line[1])
-    for j in range(max(len(fragments),len(specials))):
-      if j < len(fragments):
-        textarea.addstr(y,x,fragments[j],curses.A_NORMAL)
-        x += len(fragments[j])
-      if j < len(specials):
-        textarea.addstr(y,x,specials[j],curses.A_REVERSE)
-        key = str(y)+','+str(x)+','+str(x + len(specials[j]))
-        rooms[key] = specials[j]
-        x += len(specials[j])
-  
-  while True:
-    textarea.refresh(ypos,xpos,0,0,height-1,width-1)
-    k = textarea.getch()
-    if k == ord('q'): break
-    elif k == curses.KEY_MOUSE: print "mouseclick"
-    elif k == ord('w') and ypos > 0: ypos -= 1
-    elif k == ord('s') and ypos < h-height: ypos += 1
-    elif k == ord('a') and xpos > 0: xpos -= 1
-    elif k == ord('d') and xpos < w-width: xpos += 1
-
-    log = open(sys.path[0]+'/house/'+r+'/map','w')
-    log.write(str(ypos)+','+str(xpos)+'\n')
-    for j in range(1,len(script)):
-      log.write(script[j])
-    log.close()
-
+        specials.append(names)
+      for j in words:
+        if j in specials:
+          self.textarea.addstr(y,x,j,curses.A_REVERSE)
+        else: self.textarea.addstr(y,x,j,curses.A_NORMAL)
+        x += len(j)+1
+    run = True
+r = room()
 def main(stdscr):
-  curses.mousemask(curses.BUTTON1_CLICKED)
-  curses.mouseinterval(200)
-  open_room('room','')
-  
+  global run,ypos,xpos,height,width
+  curses.curs_set(0)
+  r.open_room('room')
+  while True:
+    r.textarea.refresh(ypos,xpos,0,0,height-1,width-1)
+    k = r.textarea.getch()
+    if k == ord('q'): break
+    elif k == ord('\t'): r.open_room('line')
+    elif k == ord('s') and ypos+height < r.textarea.getmaxyx()[0]: ypos += 1
+    elif k == ord('w') and 0 < ypos: ypos -= 1
+    elif k == ord('d') and xpos+width < r.textarea.getmaxyx()[1]: xpos += 1
+    elif k == ord('a') and 0 < xpos: xpos -= 1
+  log = open(sys.path[0]+'/house/'+r.current+'/map','w')
+  log.write(str(ypos)+','+str(xpos)+'\n')
+  for j in range(1,len(r.script)): log.write(r.script[j])
+  log.close()
+  curses.curs_set(1)
 curses.wrapper(main)
