@@ -9,23 +9,26 @@ ypos,xpos = 0,0
 run = False
 class room:
   def __init__(self):
+    self.door = ''
     self.current = ''
     self.script = []
   def open_room(self,name):
     global run,ypos,xpos
     run = False
-    if name != self.current and self.current != '':
-      log = open(sys.path[0]+'/house/'+self.current+'/map','w')
+    if name != self.door and self.door != '':
+      log = open(sys.path[0]+'/house/'+self.door+'/'+self.current,'w')
       log.write(str(ypos)+','+str(xpos)+'\n')
       for j in range(1,len(self.script)): log.write(self.script[j])
       log.close()
       del self.textarea
       stdscr.clear()
       stdscr.refresh()
-    self.current = name
-    config = open(sys.path[0]+'/house/'+name+'/map')
-    self.script = config.readlines()
-    config.close()
+    self.door = name
+    exec 'from house.'+self.door+'.config import chooser'
+    self.current = chooser()
+    choice = open(sys.path[0]+'/house/'+self.door+'/'+self.current)
+    self.script = choice.readlines()
+    choice.close()
     coords = self.script[0].split(',')
     ypos,xpos = int(coords[0]),int(coords[1])
     size = self.script[1].split(',')
@@ -59,7 +62,7 @@ def main(stdscr):
     elif k == ord('w') and 0 < ypos: ypos -= 1
     elif k == ord('d') and xpos+width < r.textarea.getmaxyx()[1]: xpos += 1
     elif k == ord('a') and 0 < xpos: xpos -= 1
-  log = open(sys.path[0]+'/house/'+r.current+'/map','w')
+  log = open(sys.path[0]+'/house/'+r.door+'/'+r.current,'w')
   log.write(str(ypos)+','+str(xpos)+'\n')
   for j in range(1,len(r.script)): log.write(r.script[j])
   log.close()
