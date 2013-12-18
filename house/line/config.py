@@ -1,0 +1,1 @@
+def chooser(): return 'map'
