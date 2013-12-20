@@ -1,1 +1,1 @@
-def chooser(): return 'map'
+def chooser(): return 'sea of ice'
