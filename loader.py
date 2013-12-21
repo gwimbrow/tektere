@@ -6,24 +6,20 @@ import curses
 stdscr = curses.initscr()
 height,width = stdscr.getmaxyx()
 ypos,xpos = 0,0
-run = False
 class room:
   def __init__(self):
     self.door = ''
     self.current = ''
-    self.script = []
-    self.special_list = []
     self.reset()
   def reset(self):
-    self.script[:] = []
-    self.special_list[:] = []
-    self.old_selection = ''
+    self.script = []
+    self.special_list = []
+    self.old_selection = []
     self.num_visible = ''
     self.count = 0
     stdscr.clear()
   def open_room(self,name):
-    global run,ypos,xpos,old_selection
-    run = False
+    global ypos,xpos
     if self.door != '':
       log = open(sys.path[0]+'/house/'+self.door+'/'+self.current,'w')
       log.write(str(ypos)+','+str(xpos)+'\n')
@@ -55,39 +51,37 @@ class room:
       for j in words:
         if j in specials:
           self.textarea.addstr(y,x,j,curses.color_pair(1))
-          self.special_list.append(str(y)+','+str(x)+'/'+j)
+          self.special_list.append([y,x,j])
         else: self.textarea.addstr(y,x,j)
         x += len(j)+1
-    run = True
   def nextspecial(self):
     global ypos,xpos,height,width
     visible = []
     for j in self.special_list:
-      potential = j.split('/')
-      potential_coords = potential[0].split(',')
-      if ypos-1 < int(potential_coords[0]) < ypos+height and xpos-1 < int(potential_coords[1]) < xpos+width: visible.append(j)
-    if len(visible) > 0:
-      if self.count > len(visible)-1 or self.num_visible != 0 and self.num_visible != len(visible): self.count = 0
+      if ypos-1 < j[0] < ypos+height and xpos-1 < j[1] < xpos+width: visible.append(j)
+    if len(visible) != 0:
+      if self.count > len(visible)-1 or self.num_visible != len(visible): self.count = 0
       self.num_visible = len(visible)
-      if self.old_selection != '':
-        old_selected = self.old_selection.split('/')
-        old_coords = old_selected[0].split(',')
-        self.textarea.chgat(int(old_coords[0]),int(old_coords[1]),len(old_selected[1]),curses.color_pair(1))
-        if self.old_selection == visible[self.count]: self.count += 1
+      if len(self.old_selection) != 0:
+        self.textarea.chgat(self.old_selection[0],self.old_selection[1],len(self.old_selection[2]),curses.color_pair(1))
+        if self.old_selection == visible[self.count] and 0 < len(visible)-1: self.count += 1
       self.old_selection = visible[self.count]
-      selected = visible[self.count].split('/')
-      scoords = selected[0].split(',')
-      self.textarea.chgat(int(scoords[0]),int(scoords[1]),len(selected[1]),curses.color_pair(4))
+      selected = visible[self.count][2]
+      self.textarea.chgat(visible[self.count][0],visible[self.count][1],len(selected),curses.color_pair(2))
       if self.count < len(visible)-1: self.count += 1
       else: self.count = 0
-      return selected[1]
+      return selected
     return ''
 r = room()
 def main(stdscr):
-  global run,ypos,xpos,height,width
+  global ypos,xpos,height,width
+  lock = ''
   curses.curs_set(0)
-  curses.use_default_colors()
-  for j in range(0, curses.COLORS): curses.init_pair(j,j,-1);
+  curses.init_color(1,400,400,800)
+  curses.init_color(2,100,100,400)
+  curses.init_color(3,600,400,1000)
+  curses.init_pair(1,1,curses.COLOR_BLACK);
+  curses.init_pair(2,2,3);
   r.open_room('room')
   while True:
     r.textarea.refresh(ypos,xpos,3,0,height-1,width-1)
