@@ -95,6 +95,8 @@ def main(stdscr):
     elif k == ord('w') and 0 < ypos: ypos -= 1
     elif k == ord('d') and xpos+width < r.textarea.getmaxyx()[1]: xpos += 1
     elif k == ord('a') and 0 < xpos: xpos -= 1
+  stdscr.clear()
+  stdscr.refresh()
   log = open(sys.path[0]+'/house/'+r.door+'/'+r.current,'w')
   log.write(str(ypos)+','+str(xpos)+'\n')
   for j in range(1,len(r.script)): log.write(r.script[j])
