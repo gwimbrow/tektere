@@ -77,9 +77,9 @@ def main(stdscr):
   global ypos,xpos,height,width
   lock = ''
   curses.curs_set(0)
-  curses.init_color(1,500,400,800)
-  curses.init_color(2,150,100,400)
-  curses.init_color(3,700,400,1000)
+  curses.init_color(1,376,77,761)
+  curses.init_color(2,502,25,941)
+  curses.init_color(3,86,38,180)
   curses.init_pair(1,1,curses.COLOR_BLACK);
   curses.init_pair(2,2,3);
   master = open('master')
