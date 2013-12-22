@@ -27,7 +27,7 @@ class room:
       log.close()
       del self.textarea
       self.reset()
-    self.door = name
+    self.door = name.lower()
     exec 'from house.'+self.door+'.config import chooser'
     self.current = chooser()
     stdscr.addstr(1,(width/2)-(len(self.current)/2),self.current)
@@ -49,7 +49,7 @@ class room:
       y,x = int(lcoords[0]),int(lcoords[1])
       words = line[1].rstrip().split(' ')
       for j in words:
-        if j in specials:
+        if j.lower() in specials:
           self.textarea.addstr(y,x,j,curses.color_pair(1))
           self.special_list.append([y,x,j])
         else: self.textarea.addstr(y,x,j)
@@ -77,12 +77,14 @@ def main(stdscr):
   global ypos,xpos,height,width
   lock = ''
   curses.curs_set(0)
-  curses.init_color(1,400,400,800)
-  curses.init_color(2,100,100,400)
-  curses.init_color(3,600,400,1000)
+  curses.init_color(1,500,400,800)
+  curses.init_color(2,150,100,400)
+  curses.init_color(3,700,400,1000)
   curses.init_pair(1,1,curses.COLOR_BLACK);
   curses.init_pair(2,2,3);
-  r.open_room('room')
+  master = open('master')
+  r.open_room(master.read().rstrip())
+  master.close()
   while True:
     r.textarea.refresh(ypos,xpos,3,0,height-1,width-1)
     k = r.textarea.getch()
@@ -97,5 +99,8 @@ def main(stdscr):
   log.write(str(ypos)+','+str(xpos)+'\n')
   for j in range(1,len(r.script)): log.write(r.script[j])
   log.close()
+  master = open('master','w')
+  master.write(r.door)
+  master.close()
   curses.curs_set(1)
 curses.wrapper(main)

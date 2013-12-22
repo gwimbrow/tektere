@@ -1,1 +1,0 @@
-def chooser(): return 'map'
