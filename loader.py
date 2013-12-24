@@ -71,17 +71,16 @@ class room:
       if self.count < len(visible)-1: self.count += 1
       else: self.count = 0
       return selected
-    return ''
+    elif self.old_selection != []: return self.old_selection[2]
+    return self.old_selection
 r = room()
 def main(stdscr):
   global ypos,xpos,height,width
   lock = ''
   curses.curs_set(0)
-  curses.init_color(1,376,77,761)
-  curses.init_color(2,502,25,941)
-  curses.init_color(3,86,38,180)
-  curses.init_pair(1,1,curses.COLOR_BLACK);
-  curses.init_pair(2,2,3);
+  curses.init_color(2,1000,400,250)
+  curses.init_pair(1,curses.COLOR_RED,curses.COLOR_BLACK);
+  curses.init_pair(2,2,curses.COLOR_BLACK);
   master = open('master')
   r.open_room(master.read().rstrip())
   master.close()
