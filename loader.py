@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import sys
 import os
-import re
 import curses
 stdscr = curses.initscr()
 height,width = stdscr.getmaxyx()
@@ -78,15 +77,20 @@ def main(stdscr):
   global ypos,xpos,height,width
   lock = ''
   curses.curs_set(0)
-  curses.init_color(2,1000,400,250)
-  curses.init_pair(1,curses.COLOR_RED,curses.COLOR_BLACK);
+  curses.init_color(1,480,120,80)
+  curses.init_color(2,1000,0,0)
+  curses.init_pair(1,1,curses.COLOR_BLACK);
   curses.init_pair(2,2,curses.COLOR_BLACK);
   master = open('master')
   r.open_room(master.read().rstrip())
   master.close()
+  location = curses.newwin(1,7,1,1)
   while True:
     r.textarea.refresh(ypos,xpos,3,0,height-1,width-1)
     k = r.textarea.getch()
+    location.clear()
+    location.addstr(0,0,str(ypos)+','+str(xpos))
+    location.refresh()
     if k == ord('q'): break
     elif k == ord('\t'): lock = r.nextspecial()
     elif k == ord('e') and lock != '': r.open_room(lock)
