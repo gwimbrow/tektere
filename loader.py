@@ -14,7 +14,7 @@ class room:
     self.script = []
     self.special_list = []
     self.old_selection = []
-    self.num_visible = ''
+    self.current_visible = []
     self.count = 0
     stdscr.clear()
   def open_room(self,name):
@@ -57,10 +57,10 @@ class room:
     global ypos,xpos,height,width
     visible = []
     for j in self.special_list:
-      if ypos-1 < j[0] < ypos+height and xpos-1 < j[1] < xpos+width: visible.append(j)
+      if ypos-1 < j[0] < ypos+(height-3) and xpos-1 < j[1] < xpos+width: visible.append(j)
     if len(visible) != 0:
-      if self.count > len(visible)-1 or self.num_visible != len(visible): self.count = 0
-      self.num_visible = len(visible)
+      if self.current_visible != visible: self.count = 0
+      self.current_visible = visible
       if len(self.old_selection) != 0:
         self.textarea.chgat(self.old_selection[0],self.old_selection[1],len(self.old_selection[2]),curses.color_pair(1))
         if self.old_selection == visible[self.count] and 0 < len(visible)-1: self.count += 1
@@ -84,13 +84,9 @@ def main(stdscr):
   master = open('master')
   r.open_room(master.read().rstrip())
   master.close()
-  location = curses.newwin(1,7,1,1)
   while True:
     r.textarea.refresh(ypos,xpos,3,0,height-1,width-1)
     k = r.textarea.getch()
-    location.clear()
-    location.addstr(0,0,str(ypos)+','+str(xpos))
-    location.refresh()
     if k == ord('q'): break
     elif k == ord('\t'): lock = r.nextspecial()
     elif k == ord('e') and lock != '': r.open_room(lock)
