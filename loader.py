@@ -1,11 +1,8 @@
 #! /usr/bin/env python
-import sys
-import os
-import curses
+import sys, os, random, curses
 stdscr = curses.initscr()
 height,width = stdscr.getmaxyx()
 ypos,xpos = 0,0
-house = os.listdir(sys.path[0]+'/house/')
 class room:
   def __init__(self):
     self.door = ''
@@ -15,7 +12,7 @@ class room:
   def reset(self):
     self.script = []
     self.special_list = []
-    self.old_selection = []
+    self.current_selection = []
     self.current_visible = []
     self.count = 0
     stdscr.clear()
@@ -34,9 +31,7 @@ class room:
       self.current = master.readlines()[1]
       master.close()
       self.firstrun = False
-    else:
-      exec 'from house.'+self.door+'.config import chooser'
-      self.current = chooser()
+    else: self.current = random.choice(os.listdir(sys.path[0]+'/house/'+self.door))
     stdscr.addstr(1,(width/2)-(len(self.current)/2),self.current)
     stdscr.hline(2,0,curses.ACS_HLINE,width)
     stdscr.refresh()
@@ -48,18 +43,22 @@ class room:
     size = self.script[1].split(',')
     self.textarea = curses.newpad(int(size[0]),int(size[1]))
     specials = []
-    for names in house: specials.append(names)
+    for names in os.listdir(sys.path[0]+'/house/'): specials.append(names)
     for i in range(2,len(self.script)):
-      line = self.script[i].split('/')
-      lcoords = line[0].split(',')
-      y,x = int(lcoords[0]),int(lcoords[1])
-      words = line[1].rstrip().split(' ')
+      if self.script[i].startswith('{'):
+        line = self.script[i].split('}')
+        lcoords = line[0].replace('{','').split(',')
+        y,x = int(lcoords[0]),int(lcoords[1])
+        words = line[1].rstrip().split(' ')
+      else: words = self.script[i].rstrip().split(' ')
       for j in words:
         if j.lower() in specials:
           self.textarea.addstr(y,x,j,curses.color_pair(1))
           self.special_list.append([y,x,j])
         else: self.textarea.addstr(y,x,j)
         x += len(j)+1
+      y += 1
+      x = int(lcoords[1])
     master = open('log','w')
     master.write(self.door+'\n'+self.current)
     master.close()
@@ -70,11 +69,11 @@ class room:
       if ypos-1 < j[0] < ypos+(height-3) and xpos-1 < j[1] < xpos+width: visible.append(j)
     if len(visible) != 0:
       if self.current_visible != visible: self.count = 0
-      if len(self.old_selection) != 0:
-        self.textarea.chgat(self.old_selection[0],self.old_selection[1],len(self.old_selection[2]),curses.color_pair(1))
+      if len(self.current_selection) != 0:
+        self.textarea.chgat(self.current_selection[0],self.current_selection[1],len(self.current_selection[2]),curses.color_pair(1))
       self.textarea.chgat(visible[self.count][0],visible[self.count][1],len(visible[self.count][2]),curses.color_pair(2))
       self.current_visible = visible
-      self.old_selection = visible[self.count]
+      self.current_selection = visible[self.count]
       if self.count < len(visible)-1: self.count += 1
       else: self.count = 0
       return visible[self.count][2]
@@ -83,7 +82,7 @@ r = room()
 def main(stdscr):
   global ypos,xpos,height,width
   curses.curs_set(0)
-  curses.init_color(1,480,120,80)
+  curses.init_color(1,600,140,80)
   curses.init_color(2,1000,0,0)
   curses.init_pair(1,1,curses.COLOR_BLACK);
   curses.init_pair(2,2,curses.COLOR_BLACK);
