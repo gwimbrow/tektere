@@ -7,9 +7,7 @@ class room:
   def __init__(self):
     self.storyhash={}
     with open('log') as log: pairs=log.readlines()[1].split(',')
-    for p in pairs:
-      key,value=p.split(':')[0],p.split(':')[1]
-      self.storyhash[key]=int(value)
+    for p in pairs: self.storyhash[p.split(':')[0]]=int(p.split(':')[1])
     self.reset()
   def reset(self):
     self.ypos,self.xpos=0,0
@@ -17,6 +15,8 @@ class room:
     self.current_selection=[]
     self.current_visible=[]
     self.count=0
+    stdscr.clear()
+    stdscr.refresh()
   def open_room(self,sub):
     global firstrun
     if firstrun==False:
@@ -24,10 +24,13 @@ class room:
       self.reset()
     script=[]
     with open(sys.path[0]+'/data/'+sub+'/'+str(self.storyhash[sub])) as choice: script=choice.readlines()
-    th=len(script)
-    tw=len(max(script,key=len))
-    self.textarea=curses.newpad(th+1,tw+1)
-    y,x=0,0
+    th=len(script)+5
+    tw=len(max(script,key=len))+6
+    self.textarea=curses.newpad(th,tw)
+    self.textarea.bkgd(' ',curses.color_pair(3))
+    self.textarea.box()
+    self.textarea.addstr(th-2,tw-len(str(self.storyhash[sub]))-2,str(self.storyhash[sub]))
+    y,x=2,3
     for i in range(len(script)):
       words=script[i].rstrip().split(' ')
       for w in words:
@@ -45,7 +48,7 @@ class room:
       files.sort()
       self.storyhash[sub]=files[files.index(self.storyhash[sub])+1]
     with open('log','w') as log: 
-      storystring = []
+      storystring=[]
       for n in range(len(self.storyhash.keys())): storystring.append(self.storyhash.keys()[n]+':'+str(self.storyhash.values()[n]))
       log.write(sub.lower()+'\n'+','.join(storystring))
     if firstrun==True: firstrun=False
@@ -57,8 +60,7 @@ class room:
     if len(visible)!=0:
       if self.current_visible!=visible: self.count = 0
       self.textarea.chgat(visible[self.count][0],visible[self.count][1],len(visible[self.count][2]),curses.color_pair(2))
-      if self.current_selection!=[]: 
-        self.textarea.chgat(self.current_selection[0],self.current_selection[1],len(self.current_selection[2]),curses.color_pair(1))
+      if self.current_selection!=[]: self.textarea.chgat(self.current_selection[0],self.current_selection[1],len(self.current_selection[2]),curses.color_pair(1))
       self.current_visible=visible
       self.current_selection=visible[self.count]
       if self.count<len(visible)-1: self.count+=1
@@ -69,10 +71,11 @@ r = room()
 def main(stdscr):
   global height,width
   curses.curs_set(0)
-  curses.init_color(1,600,140,80)
-  curses.init_color(2,1000,0,0)
-  curses.init_pair(1,1,curses.COLOR_BLACK);
-  curses.init_pair(2,2,curses.COLOR_BLACK);
+  curses.init_color(1,325,486,627)
+  curses.init_color(2,114,122,129)
+  curses.init_pair(1,1,2)
+  curses.init_pair(2,2,1)
+  curses.init_pair(3,curses.COLOR_WHITE,2)
   with open('log') as log: r.open_room(log.readlines()[0].rstrip())
   lock=''
   while True:
