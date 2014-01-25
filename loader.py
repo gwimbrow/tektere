@@ -22,6 +22,7 @@ class room:
     if firstrun==False:
       del self.textarea
       self.reset()
+    else: firstrun=False
     script=[]
     with open(sys.path[0]+'/data/'+sub+'/'+str(self.storyhash[sub])) as choice: script=choice.readlines()
     th=len(script)+5
@@ -40,18 +41,17 @@ class room:
         else: self.textarea.addstr(y,x,w)
         x+=len(w)+1
       y+=1
-      x=0
+      x=3
+    with open('log','w') as log: 
+      storystring=[]
+      for n in range(len(self.storyhash.keys())): storystring.append(self.storyhash.keys()[n]+':'+str(self.storyhash.values()[n]))
+      log.write(sub.lower()+'\n'+','.join(storystring))
     files=[]
     for names in os.listdir(sys.path[0]+'/data/'+sub):
       files.append(int(names))
     if self.storyhash[sub]!=max(files):
       files.sort()
       self.storyhash[sub]=files[files.index(self.storyhash[sub])+1]
-    with open('log','w') as log: 
-      storystring=[]
-      for n in range(len(self.storyhash.keys())): storystring.append(self.storyhash.keys()[n]+':'+str(self.storyhash.values()[n]))
-      log.write(sub.lower()+'\n'+','.join(storystring))
-    if firstrun==True: firstrun=False
   def nextspecial(self):
     global height,width
     visible=[]
