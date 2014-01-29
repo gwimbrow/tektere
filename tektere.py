@@ -2,7 +2,7 @@
 import sys, os, curses
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
-class room:
+class message:
   def __init__(self):
     self.firstrun=True
     self.dirs = []
@@ -69,7 +69,7 @@ class room:
     if self.count<len(self.links)-1: self.count+=1
     else: self.count=0
     return self.selection[2]
-r = room()
+m = message()
 def main(stdscr):
   global height,width
   curses.init_color(1,325,486,627)
@@ -80,20 +80,20 @@ def main(stdscr):
   curses.init_pair(3,curses.COLOR_WHITE,2)
   curses.init_pair(4,3,2)
   curses.curs_set(0)
-  with open('log') as log: r.load(log.read().split(':')[0])
+  with open('log') as log: m.load(log.read().split(':')[0])
   target=''
   while True:
-    r.textarea.refresh(r.ypos,r.xpos,max(0,(height/2)-(r.textarea.getmaxyx()[0]/2)),max(0,(width/2)-(r.textarea.getmaxyx()[1]/2)),min(height-1,(height/2)+(r.textarea.getmaxyx()[0]/2)),min(width-1,(width/2)+(r.textarea.getmaxyx()[1]/2)))
-    k=r.textarea.getch()
+    m.textarea.refresh(m.ypos,m.xpos,max(0,(height/2)-(m.textarea.getmaxyx()[0]/2)),max(0,(width/2)-(m.textarea.getmaxyx()[1]/2)),min(height-1,(height/2)+(m.textarea.getmaxyx()[0]/2)),min(width-1,(width/2)+(m.textarea.getmaxyx()[1]/2)))
+    k=m.textarea.getch()
     if k==ord('q'): break
-    elif k==ord('\t'): target=r.navigate()
+    elif k==ord('\t'): target=m.navigate()
     elif k==ord('e') and target!='':
-      r.load(target)
+      m.load(target)
       target=''
-    elif k==ord('s') and r.ypos+height<r.textarea.getmaxyx()[0]: r.ypos+=1
-    elif k==ord('w') and 0<r.ypos: r.ypos-=1
-    elif k==ord('d') and r.xpos+width<r.textarea.getmaxyx()[1]: r.xpos+=1
-    elif k==ord('a') and 0<r.xpos: r.xpos-=1
+    elif k==ord('s') and m.ypos+height<m.textarea.getmaxyx()[0]: m.ypos+=1
+    elif k==ord('w') and 0<m.ypos: m.ypos-=1
+    elif k==ord('d') and m.xpos+width<m.textarea.getmaxyx()[1]: m.xpos+=1
+    elif k==ord('a') and 0<m.xpos: m.xpos-=1
   stdscr.clear()
   stdscr.refresh()
   curses.curs_set(1)
