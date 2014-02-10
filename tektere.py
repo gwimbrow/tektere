@@ -23,16 +23,11 @@ class message:
       self.fresh = False
     else:
       files=[int(names) for names in os.listdir('/'.join([sys.path[0],'data',sub]))]
-      if present<max(files):
-        files.sort()
-        for f in files:
-          if f>present:
-            timestamp=f
-            break
+      if present<max(files): timestamp=min([f for f in files if f>present])
       else: timestamp=max(files)
     with open('/'.join([sys.path[0],'data',sub,str(timestamp)])) as choice: script=choice.readlines()
-    self.reset(len(script)+6,len(max(script,key=len))+6)
-    y=2
+    self.reset(len(script)+5,max(len(str(timestamp)),len(max(script,key=len)))+6)
+    y=1
     for s in script:
       if s.startswith('{'):
         quote=s.rstrip()[1:-1].split(':')
@@ -62,11 +57,12 @@ class message:
   def history(self):
     with open('log') as log: archive=log.read().rstrip().split(':')
     script=[names for names in os.listdir('/'.join([sys.path[0],'data',archive[0]])) if int(names)<=int(archive[1])]
-    self.reset(len(script)+6,len(max(script,key=len))+6)
+    self.reset(len(script)+4,len(max(script,key=len))+6)
     self.fresh=True
+    self.textarea.addstr(1,3,'username '+archive[0])
     for i in range(len(script)):
-      self.textarea.addstr(i+2,3,script[i],curses.color_pair(1))
-      self.links.append([i+2,3,script[i]])
+      self.textarea.addstr(i+3,3,script[i],curses.color_pair(1))
+      self.links.append([i+3,3,script[i]])
     return archive[0]
 m = message()
 def main(stdscr):
