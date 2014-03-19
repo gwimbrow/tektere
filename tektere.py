@@ -3,31 +3,38 @@ import sys,os,curses
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
-  def __init__(self):
-    self.fresh=True
-  def reset(self,th,tw):
+  def __init__(self): self.fresh=True
+  def reset(self,h,w):
     stdscr.clear()
     stdscr.refresh()
     if 'textarea' in locals(): del self.textarea
-    self.textarea=curses.newpad(th,tw)
+    self.textarea=curses.newpad(h,w)
     self.textarea.bkgd(' ',curses.color_pair(3))
     self.ypos=0
     self.xpos=0
     self.count=0
     self.links=[]
     self.selection=[]
-  def load(self,sub):
+    self.sender=''
+  def load(self,address):
     with open('log') as log: present=int(log.read().split(':')[1].rstrip())
     if self.fresh==True:
       timestamp=str(present)
       self.fresh = False
     else:
-      files=[int(names) for names in os.listdir('/'.join([sys.path[0],'data',sub]))]
-      if present<max(files): timestamp=min([f for f in files if f>present])
-      else: timestamp=max(files)
-    with open('/'.join([sys.path[0],'data',sub,str(timestamp)])) as choice: script=choice.readlines()
-    self.reset(len(script)+5,max(len(str(timestamp)),len(max(script,key=len)))+6)
-    y=1
+      files=[int(names) for names in os.listdir('/'.join([sys.path[0],'data',address]))]
+      if present>min(files): timestamp=max([f for f in files if f<present])
+      else: timestamp=min(files)
+    with open('/'.join([sys.path[0],'data',address,str(timestamp)])) as choice: script=choice.readlines()
+    try:
+      self.reset(len(script)+6,max(len(str(timestamp)),len(max(script,key=len)))+6)
+      self.sender=str(address).split('@')[1]
+      self.textarea.addstr(1,self.textarea.getmaxyx()[1]-len(self.sender)-2,self.sender)
+      self.links.append([1,self.textarea.getmaxyx()[1]-len(self.sender)-2,self.sender])
+      y=2
+    except IndexError:
+      self.reset(len(script)+5,max(len(str(timestamp)),len(max(script,key=len)))+6)
+      y=1
     for s in script:
       if s.startswith('{'):
         quote=s.rstrip()[1:-1].split(':')
@@ -45,8 +52,8 @@ class message:
             self.links.append([y,x,w.lower()])
           else: self.textarea.addstr(y,x,w)
           x+=len(w)+1
-    self.textarea.addstr(self.textarea.getmaxyx()[0]-2,self.textarea.getmaxyx()[1]-len(str(timestamp))-2,str(timestamp))
-    with open('log','w') as log: log.write(sub+':'+str(timestamp))
+    if self.sender!='': self.textarea.addstr(self.textarea.getmaxyx()[0]-2,self.textarea.getmaxyx()[1]-len(str(timestamp))-2,str(timestamp))
+    with open('log','w') as log: log.write(address+':'+str(timestamp))
   def navigate(self):
     self.textarea.chgat(self.links[self.count][0],self.links[self.count][1],len(self.links[self.count][2]),curses.color_pair(2))
     if self.selection!=[] and self.selection!=self.links[self.count]: self.textarea.chgat(self.selection[0],self.selection[1],len(self.selection[2]),curses.color_pair(1))
@@ -55,14 +62,13 @@ class message:
     else: self.count=0
     return self.selection[2]
   def history(self):
-    with open('log') as log: archive=log.read().rstrip().split(':')
-    script=[names for names in os.listdir('/'.join([sys.path[0],'data',archive[0]])) if int(names)<=int(archive[1])]
+    with open('log') as log: archive=log.read().split(':')
+    script=[names for names in os.listdir('/'.join([sys.path[0],'data',archive[0]]))]
     self.reset(len(script)+4,len(max(script,key=len))+6)
     self.fresh=True
-    self.textarea.addstr(1,3,'username '+archive[0])
     for i in range(len(script)):
-      self.textarea.addstr(i+3,3,script[i],curses.color_pair(1))
-      self.links.append([i+3,3,script[i]])
+      self.textarea.addstr(i+2,3,script[i],curses.color_pair(1))
+      self.links.append([i+2,3,script[i]])
     return archive[0]
 m = message()
 def main(stdscr):
@@ -89,7 +95,7 @@ def main(stdscr):
         m.load(user)
       else: m.load(target)
       target=''
-    elif k==ord('r') and m.fresh==False:
+    elif k==ord('r') and m.sender!='':
       user=m.history()
       target=''
     elif k==ord('s') and m.ypos+height<m.textarea.getmaxyx()[0]: m.ypos+=1
