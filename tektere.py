@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys,os,curses
+import sys,os,re,curses
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
@@ -9,7 +9,6 @@ class message:
     stdscr.refresh()
     if 'textarea' in locals(): del self.textarea
     self.textarea=curses.newpad(h,w)
-    self.textarea.bkgd(' ',curses.color_pair(3))
     self.ypos=0
     self.xpos=0
     self.count=0
@@ -27,32 +26,44 @@ class message:
       else: timestamp=min(files)
     with open('/'.join([sys.path[0],'data',address,str(timestamp)])) as choice: script=choice.readlines()
     try:
-      self.reset(len(script)+6,max(len(str(timestamp)),len(max(script,key=len)))+6)
-      self.sender=str(address).split('@')[1]
-      self.textarea.addstr(1,self.textarea.getmaxyx()[1]-len(self.sender)-2,self.sender)
-      self.links.append([1,self.textarea.getmaxyx()[1]-len(self.sender)-2,self.sender])
-      y=2
+      self.reset(len(script)+9,max(len(str(timestamp)),len(max(script,key=len)))+6)
+      self.sender=address.split('.')[1]
+      self.textarea.addstr(1,self.textarea.getmaxyx()[1]-len(self.sender),self.sender,curses.color_pair(3))
+      self.links.append([1,self.textarea.getmaxyx()[1]-len(self.sender),self.sender])
+      self.textarea.hline(2,0,curses.ACS_HLINE,self.textarea.getmaxyx()[1],curses.color_pair(3))
+      y=3
     except IndexError:
-      self.reset(len(script)+5,max(len(str(timestamp)),len(max(script,key=len)))+6)
-      y=1
+      self.reset(len(script)+2,max(len(str(timestamp)),len(max(script,key=len)))+6)
+      y=0
     for s in script:
-      if s.startswith('{'):
-        quote=s.rstrip()[1:-1].split(':')
-        with open('/'.join([sys.path[0],'data',quote[0],quote[1]])) as quoted: lines=[line for line in quoted.readlines() if not line.startswith('{')]
-        self.textarea.resize(max(self.textarea.getmaxyx()[0],self.textarea.getmaxyx()[0]+len(lines)),max(self.textarea.getmaxyx()[1],len(max(lines,key=len))+6))
-        for l in lines:
-          self.textarea.addstr(y,3,l,curses.color_pair(4))
-          y+=1
-      else:
-        x=3
-        y+=1
-        for w in s.rstrip().split(' '):
-          if w.lower() in [names.lower() for names in os.listdir(sys.path[0]+'/data')]:
-            self.textarea.addstr(y,x,w,curses.color_pair(1))
-            self.links.append([y,x,w.lower()])
-          else: self.textarea.addstr(y,x,w)
-          x+=len(w)+1
-    if self.sender!='': self.textarea.addstr(self.textarea.getmaxyx()[0]-2,self.textarea.getmaxyx()[1]-len(str(timestamp))-2,str(timestamp))
+      x=3
+      y+=1
+      for w in re.split('(\s+)',s.rstrip()):
+        if w.startswith('{'):
+          quote=w[1:-1].split(':')
+          with open('/'.join([sys.path[0],'data',quote[0],quote[1]])) as quoted: lines=[line for line in quoted.readlines() if not line.startswith('{')]
+          self.textarea.resize(max(self.textarea.getmaxyx()[0],self.textarea.getmaxyx()[0]+len(lines)),max(self.textarea.getmaxyx()[1],len(max(lines,key=len))+6))
+          for l in lines:
+            self.textarea.addstr(y,3,l,curses.color_pair(3))
+            y+=1
+        elif w.lower() in [names.lower() for names in os.listdir(sys.path[0]+'/data')]:
+          self.textarea.addstr(y,x,w,curses.color_pair(1))
+          self.links.append([y,x,w.lower()])
+          x+=len(w)
+        else:
+          for c in w:
+            if c=='@': self.textarea.addch(y,x,curses.ACS_ULCORNER,curses.color_pair(3))
+            elif c=='#': self.textarea.addch(y,x,curses.ACS_URCORNER,curses.color_pair(3))
+            elif c=='$': self.textarea.addch(y,x,curses.ACS_LLCORNER,curses.color_pair(3))
+            elif c=='%': self.textarea.addch(y,x,curses.ACS_LRCORNER,curses.color_pair(3))
+            elif c=='|': self.textarea.addch(y,x,curses.ACS_VLINE,curses.color_pair(3))
+            elif c=='_': self.textarea.addch(y,x,curses.ACS_HLINE,curses.color_pair(3))
+            else: self.textarea.addch(y,x,c)
+            x+=1
+    if self.sender!='':
+      self.textarea.hline(self.textarea.getmaxyx()[0]-4,0,curses.ACS_HLINE,self.textarea.getmaxyx()[1],curses.color_pair(3))
+      self.textarea.addstr(self.textarea.getmaxyx()[0]-3,0,'r: archive',curses.color_pair(3))
+      self.textarea.addstr(self.textarea.getmaxyx()[0]-2,self.textarea.getmaxyx()[1]-len(str(timestamp)),str(timestamp),curses.color_pair(3))
     with open('log','w') as log: log.write(address+':'+str(timestamp))
   def navigate(self):
     self.textarea.chgat(self.links[self.count][0],self.links[self.count][1],len(self.links[self.count][2]),curses.color_pair(2))
@@ -64,22 +75,21 @@ class message:
   def history(self):
     with open('log') as log: archive=log.read().split(':')
     script=[names for names in os.listdir('/'.join([sys.path[0],'data',archive[0]]))]
-    self.reset(len(script)+4,len(max(script,key=len))+6)
+    self.reset(len(script)+2,max(10,len(max(script,key=len)))+4)
+    self.textarea.bkgd('.',curses.color_pair(3))
     self.fresh=True
     for i in range(len(script)):
-      self.textarea.addstr(i+2,3,script[i],curses.color_pair(1))
-      self.links.append([i+2,3,script[i]])
+      self.textarea.addstr(i+1,1,script[i],curses.color_pair(1))
+      self.links.append([i+1,1,script[i]])
     return archive[0]
 m = message()
 def main(stdscr):
   global height,width
   curses.init_color(1,325,486,627)
-  curses.init_color(2,114,122,129)
-  curses.init_color(3,216,231,255)
-  curses.init_pair(1,1,2)
-  curses.init_pair(2,2,1)
-  curses.init_pair(3,curses.COLOR_WHITE,2)
-  curses.init_pair(4,3,2)
+  curses.init_color(2,216,231,255)
+  curses.init_pair(1,1,0)
+  curses.init_pair(2,0,1)
+  curses.init_pair(3,2,0)
   curses.curs_set(0)
   with open('log') as log: m.load(log.read().split(':')[0])
   target=''
