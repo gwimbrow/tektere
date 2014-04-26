@@ -3,7 +3,7 @@ import sys,os,re,curses
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
-  def __init__(self): self.tipline='tektere protocol v.4 / w: pg up / s: pg down / tab: select / e: enter / q: quit'
+  def __init__(self): self.tipline='w: pg up / s: pg down / tab: select / e: enter / q: quit'
   def reset(self,h,w):
     stdscr.clear()
     stdscr.addstr(height-1,width-len(self.tipline)-1,self.tipline,curses.color_pair(1))
@@ -15,41 +15,16 @@ class message:
     self.count=0
     self.links=[]
     self.selection=[]
-  def load(self,address,timestamp=0):
-    if '.' not in address:
-      with open('/'.join([sys.path[0],'data',address])) as choice: script=choice.readlines()
-      self.reset(len(script)+1,len(max(script,key=len))+1)
-      y=0
+  def load(self,address,source=''):
+    if source=='': script=[':'.join([address,files]) for files in os.listdir('/'.join([sys.path[0],'data',address]))]
     else:
-      if timestamp==0:
-        with open('log') as log: present=int(log.read().split(':')[1].rstrip())
-        files=[int(names) for names in os.listdir('/'.join([sys.path[0],'data',address]))]
-        if present>min(files): timestamp=max([f for f in files if f<present])
-        else: timestamp=min(files)
-      with open('/'.join([sys.path[0],'data',address,str(timestamp)])) as choice: script=choice.readlines()
-      host=address.split('.')[1].rstrip()
-      self.reset(len(script)+2,max(len(host),len(max(script,key=len)))+1)
-      self.textarea.addstr(0,self.textarea.getmaxyx()[1]-len(host)-2,host,curses.color_pair(2))
-      self.textarea.addch(0,self.textarea.getmaxyx()[1]-1,curses.ACS_DARROW,curses.color_pair(1))
-      self.links.append([0,self.textarea.getmaxyx()[1]-len(host)-2,host])
-      y=2
+      with open('/'.join([sys.path[0],'data',address,source])) as choice: script=choice.readlines()
+    self.reset(len(script)+1,len(max(script,key=len))+1)
+    y=0
     for s in script:
       x=0
       for w in re.split('(\s+)',s.rstrip()):
-        if w.startswith('{'):
-          y+=1
-          quote=w[1:-1].split(':')
-          with open('/'.join([sys.path[0],'data',quote[0],quote[1]])) as quoted: lines=[line for line in quoted.readlines() if not line.startswith('{')]
-          host=quote[0].split('.')[1].rstrip()
-          self.textarea.resize(max(self.textarea.getmaxyx()[0],self.textarea.getmaxyx()[0]+len(lines)+3),max([self.textarea.getmaxyx()[1],len(host)+1,len(max(lines,key=len))+1]))
-          self.textarea.addstr(y,self.textarea.getmaxyx()[1]-len(host)-2,host,curses.color_pair(2))
-          self.textarea.addch(y,self.textarea.getmaxyx()[1]-1,curses.ACS_DARROW,curses.color_pair(4))
-          self.links.append([y,self.textarea.getmaxyx()[1]-len(host)-2,host])
-          y+=2
-          for l in lines:
-            self.textarea.addstr(y,0,l,curses.color_pair(4))
-            y+=1
-        elif w.lower() in [names.lower() for names in os.listdir(sys.path[0]+'/data')]:
+        if ':' in w and w.split(':')[0] in [names for names in os.listdir(sys.path[0]+'/data')]:
           self.textarea.addstr(y,x,w,curses.color_pair(2))
           self.links.append([y,x,w.lower()])
           x+=len(w)
@@ -64,11 +39,10 @@ class message:
             else: self.textarea.addch(y,x,c,curses.color_pair(1))
             x+=1
       y+=1
-    if '.' in address:
-      with open('log','w') as log: log.write(address+':'+str(timestamp))
+    with open('log','w') as log: log.write(address+':'+source)
   def navigate(self):
-    self.textarea.chgat(self.links[self.count][0],self.links[self.count][1]-1,len(self.links[self.count][2])+2,curses.color_pair(3))
-    if self.selection!=[] and self.selection!=self.links[self.count]: self.textarea.chgat(self.selection[0],self.selection[1]-1,len(self.selection[2])+2,curses.color_pair(2))
+    self.textarea.chgat(self.links[self.count][0],self.links[self.count][1],len(self.links[self.count][2]),curses.color_pair(3))
+    if self.selection!=[] and self.selection!=self.links[self.count]: self.textarea.chgat(self.selection[0],self.selection[1],len(self.selection[2]),curses.color_pair(2))
     self.selection=self.links[self.count]
     if self.count<len(self.links)-1: self.count+=1
     else: self.count=0
@@ -82,7 +56,7 @@ def main(stdscr):
   curses.init_color(3,1000,106,255)
   curses.init_pair(2,3,1) # link
   curses.init_color(4,0,953,396)
-  curses.init_pair(3,1,4) # selection
+  curses.init_pair(3,4,1) # selection
   curses.init_color(5,275,39,1000)
   curses.init_pair(4,5,1) # quote / box drawing
   stdscr.bkgd(' ',curses.color_pair(1))
@@ -96,7 +70,8 @@ def main(stdscr):
     if k==ord('q'): break
     elif k==ord('\t') and len(m.links)>0: target=m.navigate()
     elif k==ord('e') and target!='':
-      m.load(target)
+      save=target.split(':')
+      m.load(save[0],save[1])
       target=''
     elif k==ord('s') and m.ypos+height<m.textarea.getmaxyx()[0]: m.ypos+=1
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
