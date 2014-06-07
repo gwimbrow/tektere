@@ -3,7 +3,8 @@ import sys,os,re,curses,string
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
-  def __init__(self):self.keys=['w: pg up / s: pg down / tab: select / e: enter / q: quit','i: north | previous / l: east / k: south | next / j: west']
+  def __init__(self):
+    self.keys=['w: pg up / s: pg down / tab: select / e: enter / q: quit','i: north | previous / l: east / k: south | next / j: west']
   def reset(self,h,w,v):
     self.h=h
     self.w=w
@@ -21,15 +22,10 @@ class message:
       self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
     else:
       self.occupied=sorted([':'.join([v[:v.index(':')],files]) for files in os.listdir('/'.join([sys.path[0],'data',v[:v.index(':')]])) if files!='scene'])
-      try:
-        if self.occupied.index(v)==0: prev=' '
-        else: prev=self.occupied[self.occupied.index(v)-1]
-      except IndexError:
-        prev=' '
-      try:
-        adv=self.occupied[self.occupied.index(v)+1]
-      except IndexError:
-        adv=' '
+      if self.occupied.index(v)==0: prev=' '
+      else: prev=self.occupied[self.occupied.index(v)-1]
+      try: adv=self.occupied[self.occupied.index(v)+1]
+      except IndexError: adv=' '
       self.adjacents=[prev,' ',adv,' ']
     if m.adjacents[0] in m.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW)
     if m.adjacents[1] in m.occupied: stdscr.addch(height/2,width-2,curses.ACS_RARROW)
@@ -114,7 +110,7 @@ def main(stdscr):
     elif k==ord('e') and target!='':
       m.load(target)
       target=''
-    elif k==ord('s') and m.ypos+height<m.h: m.ypos+=1
+    elif k==ord('s') and m.ypos+height-4<m.h: m.ypos+=1
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
     elif k==ord('i') and m.adjacents[0] in m.occupied: m.load(m.adjacents[0])
     elif k==ord('l') and m.adjacents[1] in m.occupied: m.load(m.adjacents[1])
