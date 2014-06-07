@@ -3,39 +3,55 @@ import sys,os,re,curses,string
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
-  def __init__(self): self.tipline='w: pg up / s: pg down / tab: select / e: enter / q: quit'
-  def reset(self,h,w):
-    stdscr.clear()
-    stdscr.addstr(height-1,width-len(self.tipline)-1,self.tipline)
-    stdscr.refresh()
-    if 'textarea' in locals(): del self.textarea
+  def __init__(self):self.keys=['w: pg up / s: pg down / tab: select / e: enter / q: quit','i: north | previous / l: east / k: south | next / j: west']
+  def reset(self,h,w,v):
     self.h=h
     self.w=w
-    self.textarea=curses.newpad(self.h,self.w)
-    self.textarea.bkgd(' ',curses.color_pair(4))
-    self.textarea.addch(2,0,curses.ACS_LTEE)
-    self.textarea.addch(2,self.w-1,curses.ACS_RTEE)
-    self.textarea.hline(2,1,curses.ACS_HLINE,self.w-2)
     self.ypos=0
     self.count=0
     self.links=[]
     self.selection=[]
-  def load(self,verse):
-    if verse.endswith(':'):
-      with open('/'.join([sys.path[0],'data',verse[:verse.index(':')],verse[:verse.index(':')]])) as choice: script=choice.readlines()
-      script.extend('\n')
-      script.extend([''.join([verse,files]) for files in os.listdir('/'.join([sys.path[0],'data',verse[:verse.index(':')]])) if files!=verse[:verse.index(':')]])
-      c=map(int,verse[:verse.index(':')].split('.'))
+    if 'textarea' in locals(): del self.textarea
+    stdscr.clear()
+    stdscr.addstr(height-1,0,self.keys[0])
+    stdscr.addstr(height-1,width-len(self.keys[1])-1,self.keys[1])
+    if v.endswith(':'):
+      c=map(int,v[:v.index(':')].split('.'))
       self.occupied=[names+':' for names in os.listdir('/'.join([sys.path[0],'data']))]
       self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
     else:
-      with open('/'.join([sys.path[0],'data',verse[:verse.index(':')],verse[verse.index(':')+1:len(verse)]])) as choice: script=choice.readlines()
-      self.occupied=sorted([':'.join([verse[:verse.index(':')],files]) for files in os.listdir('/'.join([sys.path[0],'data',verse[:verse.index(':')]])) if files!=verse[:verse.index(':')]])
-      self.adjacents=[self.occupied[max(0,self.occupied.index(verse)-1)],' ',self.occupied[min(len(self.occupied)-1,self.occupied.index(verse)+1)],' ']
-    self.reset(len(script)+7,len(max(script,key=len))+3)
-    self.textarea.addstr(1,1,verse[:verse.index(':')+1],curses.color_pair(2))
-    self.links.append([1,1,verse[:verse.index(':')+1]])
-    self.textarea.addstr(1,len(verse[:verse.index(':')])+3,verse[verse.index(':')+1:len(verse)],curses.color_pair(1))
+      self.occupied=sorted([':'.join([v[:v.index(':')],files]) for files in os.listdir('/'.join([sys.path[0],'data',v[:v.index(':')]])) if files!='scene'])
+      try:
+        if self.occupied.index(v)==0: prev=' '
+        else: prev=self.occupied[self.occupied.index(v)-1]
+      except IndexError:
+        prev=' '
+      try:
+        adv=self.occupied[self.occupied.index(v)+1]
+      except IndexError:
+        adv=' '
+      self.adjacents=[prev,' ',adv,' ']
+    if m.adjacents[0] in m.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW)
+    if m.adjacents[1] in m.occupied: stdscr.addch(height/2,width-2,curses.ACS_RARROW)
+    if m.adjacents[2] in m.occupied: stdscr.addch(height-2,width/2,curses.ACS_DARROW)
+    if m.adjacents[3] in m.occupied: stdscr.addch(height/2,2,curses.ACS_LARROW)
+    stdscr.refresh()
+    self.textarea=curses.newpad(self.h,self.w)
+    self.textarea.bkgd(' ',curses.color_pair(4))
+    self.textarea.addstr(1,1,v[:v.index(':')+1],curses.color_pair(2))
+    self.links.append([1,1,v[:v.index(':')+1]])
+    self.textarea.addstr(1,len(v[:v.index(':')])+3,v[v.index(':')+1:],curses.color_pair(1))
+    self.textarea.addch(2,0,curses.ACS_LTEE)
+    self.textarea.addch(2,self.w-1,curses.ACS_RTEE)
+    self.textarea.hline(2,1,curses.ACS_HLINE,self.w-2)
+  def load(self,verse):
+    if verse.endswith(':'):
+      with open('/'.join([sys.path[0],'data',verse[:verse.index(':')],'scene'])) as choice: script=choice.readlines()
+      script.extend('\n')
+      script.extend(sorted([''.join([verse,files]) for files in os.listdir('/'.join([sys.path[0],'data',verse[:verse.index(':')]])) if files!='scene']))
+    else:
+      with open('/'.join([sys.path[0],'data',verse[:verse.index(':')],verse[verse.index(':')+1:]])) as choice: script=choice.readlines()
+    self.reset(len(script)+7,len(max(script,key=len))+3,verse)
     y=4
     for s in script:
       x=1
@@ -86,12 +102,12 @@ def main(stdscr):
   curses.init_pair(3,4,0) # selection
   curses.init_color(5,275,39,1000)
   curses.init_pair(4,5,0) # box drawing
-  stdscr.bkgd(' ',curses.color_pair(1))
+  stdscr.bkgd(' ',curses.color_pair(4))
   curses.curs_set(0)
   with open('log') as log: m.load(log.read().rstrip())
   target=''
   while True:
-    m.textarea.refresh(m.ypos,0,max(0,(height/2)-(m.h/2)),(width/2)-(m.w/2),min(height-2,(height/2)+(m.h/2)),(width/2)+(m.w/2))
+    m.textarea.refresh(m.ypos,0,max(3,(height/2)-(m.h/2)),(width/2)-(m.w/2),min(height-3,(height/2)+(m.h/2)),(width/2)+(m.w/2))
     k=m.textarea.getch()
     if k==ord('q'): break
     elif k==ord('\t') and len(m.links)>0: target=m.navigate()
