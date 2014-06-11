@@ -1,11 +1,14 @@
 #! /usr/bin/env python
-import os,re,curses
+import os,re,curses,curses.textpad
 from subprocess import call
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
-  def __init__(self): self.keys=['w: pg up / s: pg down / tab: select / e: enter / q: quit','i: north, previous / l: east / k: south, next / j: west']
+  def __init__(self):
+    self.keys=[ 'w: up / s: down / tab: select / e: enter / r: revise / q: quit','i: north, previous / l: east / k: south, next / j: west',
+    ['first','second','third','fourth','fifth','sixth','seventh','eigth','ninth']]
   def reset(self,h,w,v):
+    os.system('setterm -cursor off')
     self.h=h
     self.w=w
     self.ypos=0
@@ -19,7 +22,19 @@ class message:
     if v.endswith(':'):
       c=map(int,v[:v.index(':')].split('.'))
       self.occupied=[names+':' for names in os.listdir('data')]
-      self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
+      self.adjacents=['.'.join(map(str,[max(0,c[0]-1),c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],max(0,c[1]-1)]))+':']
+      if v[0]!='0':
+        if m.adjacents[0] in m.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW)
+        else: stdscr.addch(2,width/2,curses.ACS_UARROW,curses.color_pair(3))
+      if v[2]!='9':
+        if m.adjacents[1] in m.occupied: stdscr.addch(height/2,width-2,curses.ACS_RARROW)
+        else: stdscr.addch(height/2,width-2,curses.ACS_RARROW,curses.color_pair(3))
+      if v[0]!='9':
+        if m.adjacents[2] in m.occupied: stdscr.addch(height-2,width/2,curses.ACS_DARROW)
+        else: stdscr.addch(height-2,width/2,curses.ACS_DARROW,curses.color_pair(3))
+      if v[2]!='0':
+        if m.adjacents[3] in m.occupied: stdscr.addch(height/2,2,curses.ACS_LARROW)
+        else: stdscr.addch(height/2,2,curses.ACS_LARROW,curses.color_pair(3))
     else:
       self.occupied=sorted([':'.join([v[:v.index(':')],files]) for files in os.listdir('/'.join(['data',v[:v.index(':')]])) if files!='scene'])
       if self.occupied.index(v)==0: prev=' '
@@ -27,16 +42,14 @@ class message:
       try: adv=self.occupied[self.occupied.index(v)+1]
       except IndexError: adv=' '
       self.adjacents=[prev,' ',adv,' ']
-    if m.adjacents[0] in m.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW)
-    if m.adjacents[1] in m.occupied: stdscr.addch(height/2,width-2,curses.ACS_RARROW)
-    if m.adjacents[2] in m.occupied: stdscr.addch(height-2,width/2,curses.ACS_DARROW)
-    if m.adjacents[3] in m.occupied: stdscr.addch(height/2,2,curses.ACS_LARROW)
+      if m.adjacents[0] in m.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW)
+      if m.adjacents[2] in m.occupied: stdscr.addch(height-2,width/2,curses.ACS_DARROW)
     stdscr.refresh()
     self.textarea=curses.newpad(self.h,self.w)
     self.textarea.bkgd(' ',curses.color_pair(4))
     self.textarea.addstr(1,1,v[:v.index(':')+1],curses.color_pair(2))
     self.links.append([1,1,v[:v.index(':')+1]])
-    self.textarea.addstr(1,len(v[:v.index(':')])+3,v[v.index(':')+1:],curses.color_pair(1))
+    self.textarea.addstr(1,6,v[v.index(':')+1:],curses.color_pair(1))
     self.textarea.addch(2,0,curses.ACS_LTEE)
     self.textarea.addch(2,self.w-1,curses.ACS_RTEE)
     self.textarea.hline(2,1,curses.ACS_HLINE,self.w-2)
@@ -44,7 +57,10 @@ class message:
     if verse.endswith(':'):
       with open('/'.join(['data',verse[:verse.index(':')],'scene'])) as choice: script=choice.readlines()
       script.extend('\n')
-      script.extend(sorted([''.join([verse,files]) for files in os.listdir('/'.join(['data',verse[:verse.index(':')]])) if files!='scene']))
+      script.extend(sorted([''.join(['Act the ',verse,files]) for files in os.listdir('/'.join(['data',verse[:verse.index(':')]])) if files!='scene']))
+      script.extend('\n')
+      n=[verse+f for f in self.keys[2] if ''.join(['Act the ',verse,f]) not in script]
+      script.append(' '.join(['write of the',n[0],'encounter']))
     else:
       with open('/'.join(['data',verse[:verse.index(':')],verse[verse.index(':')+1:]])) as choice: script=choice.readlines()
     self.reset(len(script)+7,max(len(verse),len(max(script,key=len)))+3,verse)
@@ -62,8 +78,9 @@ class message:
       else:
         for w in re.split('(\s+)',s.rstrip()):
           if ':' in w and w[:w.index(':')] in [names for names in os.listdir('data')]:
+            if verse.endswith(':') and not w.endswith(':'): w=w[w.index(':')+1:]
             self.textarea.addstr(y,x,w,curses.color_pair(2))
-            self.links.append([y,x,w.lower()])
+            self.links.append([y,x,w])
             x+=len(w)
           else:
             for c in w:
@@ -87,11 +104,18 @@ class message:
     if self.count<len(self.links)-1: self.count+=1
     else: self.count=0
     return self.selection[2]
-  def create(self,l):
-    os.mkdir('/'.join(['data',l[:l.index(':')]]))
-    with open('/'.join(['data',l[:l.index(':')],'scene']),'w') as scene: scene.write('scene '+l)
-    call(['nano','/'.join(['data',l[:l.index(':')],'scene'])])
-    self.load(l)
+  def revise(self,l):
+    if l.endswith(':'):
+      os.mkdir('/'.join(['data',l[:l.index(':')]]))
+      with open('/'.join(['data',l[:l.index(':')],'scene']),'w') as scene: scene.write('scene '+l)
+      call(['nano','-t','/'.join(['data',l[:l.index(':')],'scene'])])
+      self.load(l)
+    else:
+      if l not in [files for files in os.listdir('/'.join(['data',self.textarea.instr(1,1,3)]))]:
+        with open('/'.join(['data',self.textarea.instr(1,1,3),l]),'w') as newfile: newfile.write('newfile')
+      call(['nano','-t','/'.join(['data',self.textarea.instr(1,1,3),l])])
+      if l=='scene': l=''
+      self.load(self.textarea.instr(1,1,4)+l)
 m = message()
 def main(stdscr):
   global height,width
@@ -104,7 +128,6 @@ def main(stdscr):
   curses.init_color(5,275,39,1000)
   curses.init_pair(4,5,0) # box drawing
   stdscr.bkgd(' ',curses.color_pair(4))
-  curses.curs_set(0)
   with open('log') as log: m.load(log.read().rstrip())
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
@@ -114,12 +137,20 @@ def main(stdscr):
     if k==ord('q'): break
     elif k==ord('\t') and len(m.links)>0: target=m.navigate()
     elif k==ord('e') and target!='':
-      m.load(target)
+      if ':' not in target:
+        try: m.load(m.textarea.instr(1,1,4)+target)
+        except IOError: m.revise(target)
+      else: m.load(target)
       target=''
+    elif k==ord('r') and target!='':
+      if target.endswith(':'): m.revise('scene')
+      elif ':' not in target:
+        m.revise(target)
+        target=''
     elif k==ord('s') and m.ypos+height-4<m.h: m.ypos+=1
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
     elif k in kc:
       if m.adjacents[kc.index(k)] in m.occupied: m.load(m.adjacents[kc.index(k)])
-      elif m.adjacents[kc.index(k)].endswith(':'): m.create(m.adjacents[kc.index(k)])
-  curses.curs_set(1)
+      elif m.adjacents[kc.index(k)].endswith(':'): m.revise(m.adjacents[kc.index(k)])
+  os.system('setterm -cursor on')
 curses.wrapper(main)
