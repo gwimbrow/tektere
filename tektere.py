@@ -1,10 +1,3 @@
-# To do: create an additional folder subdirectory below the /data dir that will contain the folders for different scenarios.
-# When a scenario is loaded, reset the dict stored in the log file to {}.
-# Load a config file from the scenario folder which contains color information and a dictionary sequence to compare with the dict in the log file.
-# Use if len(set(self.trail.items()) & set(self.scenario.items()))==len(scenario.items()):
-# to check if the dicts have all the same values and same number of values. if true, then load the next scenario.
-# The scenario folders will be numbered sequentially. Display the scenario number at the top-left corner of the screen (above the UARROW)
-#
 #! /usr/bin/env python
 import sys,os,re,ast,getopt,curses
 from subprocess import call
@@ -13,9 +6,13 @@ height,width=stdscr.getmaxyx()
 class message:
   def __init__(self):
     self.write=False
-    options,rmd=getopt.getopt(sys.argv[1:],'w')
-    for opt,arg in options:
-      if opt=='-w': self.write=True
+    options,rmd=getopt.getopt(sys.argv[1:],'wd:')
+    if len(options)>0:
+      for opt,arg in options:
+        if opt=='-w': self.write=True
+        if opt=='-d': self.scenario='data/'+arg
+        elif '-d' not in opt: self.scenario='data/0'
+    else: self.scenario='data/0'
     self.keys=[ 'w: up / s: down / tab: select / e: enter / q: quit',' / r: revise','i: north, previous / l: east / k: south, next / j: west',['I','II','III','IV','V']]
   def reset(self,h,w):
     os.system('setterm -cursor off')
@@ -27,23 +24,24 @@ class message:
     self.selection=[]
     if 'textarea' in locals(): del self.textarea
     stdscr.clear()
+    stdscr.addstr(0,0,self.scenario.replace('data/',''))
     stdscr.addstr(height-1,0,self.keys[0])
     if self.write==True: stdscr.addstr(height-1,len(self.keys[0])+1,self.keys[1])
     stdscr.addstr(height-1,width-len(self.keys[2])-1,self.keys[2])
     self.textarea=curses.newpad(self.h,self.w)
     self.textarea.bkgd(' ',curses.color_pair(4))
   def load(self,verse):
-    with open('log') as log: self.trail=ast.literal_eval(log.readlines()[1].rstrip())
+    with open('log') as log: self.trail=ast.literal_eval(log.readlines()[2].rstrip())
     if verse.endswith(':'):
-      with open('/'.join(['data',verse[:verse.index(':')],'scene'])) as choice: script=choice.readlines()
+      with open('/'.join([self.scenario,verse[:verse.index(':')],'scene'])) as choice: script=choice.readlines()
       script.extend('\n')
-      script.extend(sorted([''.join(['Act ',verse,files]) for files in os.listdir('/'.join(['data',verse[:verse.index(':')]])) if files!='scene']))
+      script.extend(sorted([''.join(['Act ',verse,files]) for files in os.listdir('/'.join([self.scenario,verse[:verse.index(':')]])) if files!='scene']))
       script.extend('\n')
       n=[verse+f for f in self.keys[3] if ''.join(['Act ',verse,f]) not in script]
       if self.write==True: script.append('write '+n[0])
       self.reset(len(script)+7,max(len(verse),len(max(script,key=len)))+3)
       c=map(int,verse[:verse.index(':')].split('.'))
-      self.occupied=[names+':' for names in os.listdir('data')]
+      self.occupied=[names+':' for names in os.listdir(self.scenario)]
       self.adjacents=['.'.join(map(str,[max(0,c[0]-1),c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],max(0,c[1]-1)]))+':']
       if verse[0]!='0':
         if verse in self.trail.keys() and self.trail[verse]==0: stdscr.addch(2,width/2,curses.ACS_UARROW)
@@ -62,9 +60,9 @@ class message:
         elif self.adjacents[3] in self.occupied: stdscr.addch(height/2,2,curses.ACS_LARROW,curses.color_pair(3))
         elif self.write==True: stdscr.addch(height/2,2,curses.ACS_LARROW,curses.color_pair(3))
     else:
-      with open('/'.join(['data',verse[:verse.index(':')],verse[verse.index(':')+1:]])) as choice: script=choice.readlines()
+      with open('/'.join([self.scenario,verse[:verse.index(':')],verse[verse.index(':')+1:]])) as choice: script=choice.readlines()
       self.reset(len(script)+7,max(len(verse),len(max(script,key=len)))+3)
-      self.occupied=sorted([':'.join([verse[:verse.index(':')],files]) for files in os.listdir('/'.join(['data',verse[:verse.index(':')]])) if files!='scene'])
+      self.occupied=sorted([':'.join([verse[:verse.index(':')],files]) for files in os.listdir('/'.join([self.scenario,verse[:verse.index(':')]])) if files!='scene'])
       if self.occupied.index(verse)==0: prev=' '
       else: prev=self.occupied[self.occupied.index(verse)-1]
       try: adv=self.occupied[self.occupied.index(verse)+1]
@@ -81,7 +79,7 @@ class message:
     for s in script:
       x=1
       if s.startswith('{'):
-        with open('/'.join(['data',s[s.index('{')+1:s.index(':')],s[s.index(':')+1:s.index('}')]])) as quoted: quote=quoted.readlines()
+        with open('/'.join([self.scenario,s[s.index('{')+1:s.index(':')],s[s.index(':')+1:s.index('}')]])) as quoted: quote=quoted.readlines()
         self.h=max(self.h,len(quote)+7)
         self.w=max(self.w,len(max(quote,key=len))+3)
         self.textarea.resize(self.h,self.w)
@@ -90,14 +88,14 @@ class message:
           y+=1
       else:
         for w in re.split('(\s+)',s.rstrip()):
-          if ':' in w and w[:w.index(':')] in [names for names in os.listdir('data')]:
+          if ':' in w and w[:w.index(':')] in [names for names in os.listdir(self.scenario)]:
             if verse.endswith(':') and not w.endswith(':'): w=w[w.index(':')+1:]
             self.textarea.addstr(y,x,w,curses.color_pair(2))
             self.links.append([y,x,w])
           else: self.textarea.addstr(y,x,w,curses.color_pair(1))
           x+=len(w)
         y+=1
-    with open('log','w') as log: log.write('\n'.join([verse,str(self.trail)]))
+    with open('log','w') as log: log.write('\n'.join([self.scenario,verse,str(self.trail)]))
   def navigate(self):
     self.textarea.chgat(self.links[self.count][0],self.links[self.count][1],len(self.links[self.count][2]),curses.color_pair(3))
     if self.selection!=[] and self.selection!=self.links[self.count]: self.textarea.chgat(self.selection[0],self.selection[1],len(self.selection[2]),curses.color_pair(2))
@@ -107,14 +105,14 @@ class message:
     return self.selection[2]
   def revise(self,l):
     if l.endswith(':'):
-      os.mkdir('/'.join(['data',l[:l.index(':')]]))
-      with open('/'.join(['data',l[:l.index(':')],'scene']),'w') as scene: scene.write('scene '+l)
-      call(['nano','-t','/'.join(['data',l[:l.index(':')],'scene'])])
+      os.mkdir('/'.join([self.scenario,l[:l.index(':')]]))
+      with open('/'.join([self.scenario,l[:l.index(':')],'scene']),'w') as scene: scene.write('scene '+l)
+      call(['nano','-t','/'.join([self.scenario,l[:l.index(':')],'scene'])])
       self.load(l)
     else:
-      if l not in [files for files in os.listdir('/'.join(['data',self.textarea.instr(1,1,3)]))]:
-        with open('/'.join(['data',self.textarea.instr(1,1,3),l]),'w') as newfile: newfile.write('newfile')
-      call(['nano','-t','/'.join(['data',self.textarea.instr(1,1,3),l])])
+      if l not in [files for files in os.listdir('/'.join([self.scenario,self.textarea.instr(1,1,3)]))]:
+        with open('/'.join([self.scenario,self.textarea.instr(1,1,3),l]),'w') as newfile: newfile.write('newfile')
+      call(['nano','-t','/'.join([self.scenario,self.textarea.instr(1,1,3),l])])
       if l=='scene': l=''
       self.load(self.textarea.instr(1,1,4)+l)
 m = message()
@@ -128,7 +126,7 @@ def main(stdscr):
   curses.init_color(5,275,39,1000)
   curses.init_pair(4,5,0) # box drawing
   stdscr.bkgd(' ',curses.color_pair(4))
-  with open('log') as log: m.load(log.readlines()[0].rstrip())
+  with open('log') as log: m.load(log.readlines()[1].rstrip())
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
   while True:
@@ -152,9 +150,17 @@ def main(stdscr):
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
     elif k in kc:
       if m.adjacents[kc.index(k)].endswith(':'):
-        m.trail[m.textarea.instr(1,1,4)]=int(kc.index(k))
-        with open('log','w') as log: log.write('\n'.join([m.textarea.instr(1,1,4),str(m.trail)]))
-        if m.write==True and m.adjacents[kc.index(k)] not in m.occupied: m.revise(m.adjacents[kc.index(k)])
-      if m.adjacents[kc.index(k)] in m.occupied: m.load(m.adjacents[kc.index(k)])
+        if m.adjacents[kc.index(k)] in m.occupied:
+          m.trail[m.textarea.instr(1,1,4)]=int(kc.index(k))
+          with open(m.scenario+'/config') as config: cypher=ast.literal_eval(config.read().rstrip())
+          if len(set(m.trail.items()) & set(cypher.items()))==len(cypher.items()):
+            m.scenario=m.scenario[:m.scenario.index('/')+1]+str(int(m.scenario[m.scenario.index('/')+1:])+1)
+            m.trail={}
+            door='0.0:'
+          else: door=m.adjacents[kc.index(k)]
+          with open('log','w') as log: log.write('\n'.join([m.scenario,door,str(m.trail)]))
+          m.load(door)
+        elif m.write==True: m.revise(m.adjacents[kc.index(k)])
+      elif m.adjacents[kc.index(k)] in m.occupied: m.load(m.adjacents[kc.index(k)])
   os.system('setterm -cursor on')
 curses.wrapper(main)
