@@ -43,25 +43,18 @@ class message:
       n=[verse+f for f in self.keys[3] if ''.join(['Act ',verse,f]) not in script]
       if self.write==True: script.append('write '+n[0])
       self.reset(len(script)+7,max(len(verse),len(max(script,key=len)))+3)
-      c=map(int,verse[:verse.index(':')].split('.'))
-      self.occupied=[names+':' for names in os.listdir(self.scenario)]
-      self.adjacents=['.'.join(map(str,[max(0,c[0]-1),c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],max(0,c[1]-1)]))+':']
-      if verse[0]!='0':
-        if verse in self.trail.keys() and self.trail[verse]==0: stdscr.addch(2,width/2,curses.ACS_UARROW)
-        elif self.adjacents[0] in self.occupied: stdscr.addch(2,width/2,curses.ACS_UARROW,curses.color_pair(3))
-        elif self.write==True: stdscr.addch(2,width/2,curses.ACS_UARROW,curses.color_pair(2))
-      if verse[2]!=min(9,len(self.occupied)-1):
-        if verse in self.trail.keys() and self.trail[verse]==1: stdscr.addch(height/2,width-2,curses.ACS_RARROW)
-        elif self.adjacents[1] in self.occupied: stdscr.addch(height/2,width-2,curses.ACS_RARROW,curses.color_pair(3))
-        elif self.write==True: stdscr.addch(height/2,width-2,curses.ACS_RARROW,curses.color_pair(2))
-      if verse[0]!=min(9,len(self.occupied)-1):
-        if verse in self.trail.keys() and self.trail[verse]==2: stdscr.addch(height-2,width/2,curses.ACS_DARROW)
-        elif self.adjacents[2] in self.occupied: stdscr.addch(height-2,width/2,curses.ACS_DARROW,curses.color_pair(3))
-        elif self.write==True: stdscr.addch(height-2,width/2,curses.ACS_DARROW,curses.color_pair(2))
-      if verse[2]!='0':
-        if verse in self.trail.keys() and self.trail[verse]==3: stdscr.addch(height/2,2,curses.ACS_LARROW)
-        elif self.adjacents[3] in self.occupied: stdscr.addch(height/2,2,curses.ACS_LARROW,curses.color_pair(3))
-        elif self.write==True: stdscr.addch(height/2,2,curses.ACS_LARROW,curses.color_pair(3))
+      c=map(int,verse[:-1].split('.'))
+      self.occupied=[names+':' for names in os.listdir(self.scenario) if names!='1.1']
+      with open(m.scenario+'/config') as config: cypher=ast.literal_eval(config.read().rstrip())
+      if len(set(m.trail.items()) & set(cypher.items()))==len(cypher.items()): self.occupied.append('1.1:')
+      self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
+      arrows={0:(2,width/2,curses.ACS_UARROW),1:(height/2,width-2,curses.ACS_RARROW),2:(height-2,width/2,curses.ACS_DARROW),3:(height/2,2,curses.ACS_LARROW)}
+      for adj in [a for a in self.adjacents if '-' not in a]:
+        y,x,z=arrows[self.adjacents.index(adj)]
+        if adj in self.occupied:
+          if adj=='1.1:': stdscr.addch(y,x,z,curses.color_pair(5))
+          else: stdscr.addch(y,x,z,curses.color_pair(3))
+        elif self.write==True and adj!='1.1:': stdscr.addch(y,x,z,curses.color_pair(2))
     else:
       with open('/'.join([self.scenario,verse[:verse.index(':')],verse[verse.index(':')+1:]])) as choice: script=choice.readlines()
       self.reset(len(script)+7,max(len(verse),len(max(script,key=len)))+3)
@@ -141,11 +134,12 @@ class message:
     for c in [(vul+1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_LLCORNER)
     for c in [(vul,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_VLINE)
     for c in [(vul-1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_ULCORNER)
-    with open('log') as log: cypher=ast.literal_eval(log.readlines()[2].rstrip())
     cards=[curses.ACS_UARROW,curses.ACS_RARROW,curses.ACS_DARROW,curses.ACS_LARROW]
-    for c in cypher.keys():
+    with open(m.scenario+'/config') as config: cypher=ast.literal_eval(config.read().rstrip())
+    for c in self.trail.keys():
       cy,cx=map(int,c[:-1].split('.'))
-      self.textarea.addch(vseq[cy],hseq[cx],cards[cypher[c]],curses.color_pair(3))
+      if c in cypher.keys() and self.trail[c]==cypher[c]: self.textarea.addch(vseq[cy],hseq[cx],cards[self.trail[c]],curses.color_pair(3))
+      else: self.textarea.addch(vseq[cy],hseq[cx],cards[self.trail[c]],curses.color_pair(2))
 m = message()
 def main(stdscr):
   curses.init_color(1,1000,1000,1000)
@@ -156,6 +150,8 @@ def main(stdscr):
   curses.init_pair(3,4,0) # selection
   curses.init_color(5,275,39,1000)
   curses.init_pair(4,5,0) # box drawing
+  curses.init_color(6,1000,1000,153)
+  curses.init_pair(5,6,0) # prize
   stdscr.bkgd(' ',curses.color_pair(4))
   with open('log') as log: m.load(log.readlines()[1].rstrip())
   target=''
@@ -183,15 +179,9 @@ def main(stdscr):
     elif k in kc:
       if m.adjacents[kc.index(k)].endswith(':'):
         if m.adjacents[kc.index(k)] in m.occupied:
-          m.trail[m.textarea.instr(1,1,4)]=int(kc.index(k))
-          with open(m.scenario+'/config') as config: cypher=ast.literal_eval(config.read().rstrip())
-          if m.write==False and len(set(m.trail.items()) & set(cypher.items()))==len(cypher.items()):
-            m.scenario=m.scenario[:m.scenario.index('/')+1]+str(int(m.scenario[m.scenario.index('/')+1:])+1)
-            m.trail={}
-            door='0.0:'
-          else: door=m.adjacents[kc.index(k)]
-          with open('log','w') as log: log.write('\n'.join([m.scenario,door,str(m.trail)]))
-          m.load(door)
+          m.trail[m.textarea.instr(1,1,4)]=kc.index(k)
+          with open('log','w') as log: log.write('\n'.join([m.scenario,m.textarea.instr(1,1,4),str(m.trail)]))
+          m.load(m.adjacents[kc.index(k)])
         elif m.write==True: m.revise(m.adjacents[kc.index(k)])
       elif m.adjacents[kc.index(k)] in m.occupied: m.load(m.adjacents[kc.index(k)])
   os.system('setterm -cursor on')
