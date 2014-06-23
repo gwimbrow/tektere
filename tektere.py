@@ -6,14 +6,17 @@ height,width=stdscr.getmaxyx()
 class message:
   def __init__(self):
     self.write=False
-    options,rmd=getopt.getopt(sys.argv[1:],'wd:')
+    try: options,rmd=getopt.getopt(sys.argv[1:],'wd:')
+    except getopt.GetoptError as err:
+        print str(err)
+        sys.exit(2)
     if len(options)>0:
       for opt,arg in options:
         if opt=='-w': self.write=True
         if opt=='-d': self.scenario='data/'+arg
         elif '-d' not in opt: self.scenario='data/0'
     else: self.scenario='data/0'
-    self.keys=[ 'w: up / s: down / tab: select / e: enter / q: quit',' / r: revise','i: north, previous / l: east / k: south, next / j: west',['I','II','III','IV','V']]
+    self.keys=[ 'w: up / s: down / tab: select / e: enter / q: quit',' / r: revise','m: map / i: north, previous / l: east / k: south, next / j: west',['I','II','III','IV','V']]
   def reset(self,h,w):
     os.system('setterm -cursor off')
     self.h=h
@@ -30,8 +33,8 @@ class message:
     stdscr.addstr(height-1,width-len(self.keys[2])-1,self.keys[2])
     self.textarea=curses.newpad(self.h,self.w)
     self.textarea.bkgd(' ',curses.color_pair(4))
-  def load(self,verse):
     with open('log') as log: self.trail=ast.literal_eval(log.readlines()[2].rstrip())
+  def load(self,verse):
     if verse.endswith(':'):
       with open('/'.join([self.scenario,verse[:verse.index(':')],'scene'])) as choice: script=choice.readlines()
       script.extend('\n')
@@ -115,6 +118,34 @@ class message:
       call(['nano','-t','/'.join([self.scenario,self.textarea.instr(1,1,3),l])])
       if l=='scene': l=''
       self.load(self.textarea.instr(1,1,4)+l)
+  def grid(self):
+    room=self.textarea.instr(1,1,4)
+    self.reset(12,20)
+    stdscr.refresh()
+    self.textarea.addstr(11,5,'return to ')
+    self.textarea.addstr(11,15,room,curses.color_pair(2))
+    self.links.append([11,15,room])
+    vseq=[2,5,8]
+    hseq=[4,10,16]
+    for v in vseq: self.textarea.addstr(v,0,str(vseq.index(v)))
+    for h in hseq: self.textarea.addstr(0,h,str(hseq.index(h)))
+    for c in [(vul-1,hul-1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul-1,hul) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul-1,hul+1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul-1,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_URCORNER)
+    for c in [(vul,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_VLINE)
+    for c in [(vul+1,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_LRCORNER)
+    for c in [(vul+1,hul-1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul+1,hul) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul+1,hul+1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
+    for c in [(vul+1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_LLCORNER)
+    for c in [(vul,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_VLINE)
+    for c in [(vul-1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_ULCORNER)
+    with open('log') as log: cypher=ast.literal_eval(log.readlines()[2].rstrip())
+    cards=[curses.ACS_UARROW,curses.ACS_RARROW,curses.ACS_DARROW,curses.ACS_LARROW]
+    for c in cypher.keys():
+      cy,cx=map(int,c[:-1].split('.'))
+      self.textarea.addch(vseq[cy],hseq[cx],cards[cypher[c]],curses.color_pair(3))
 m = message()
 def main(stdscr):
   curses.init_color(1,1000,1000,1000)
@@ -146,6 +177,7 @@ def main(stdscr):
       elif ':' not in target:
         m.revise(target)
         target=''
+    elif k==ord('m'): m.grid()
     elif k==ord('s') and m.ypos+height-4<m.h: m.ypos+=1
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
     elif k in kc:
@@ -153,7 +185,7 @@ def main(stdscr):
         if m.adjacents[kc.index(k)] in m.occupied:
           m.trail[m.textarea.instr(1,1,4)]=int(kc.index(k))
           with open(m.scenario+'/config') as config: cypher=ast.literal_eval(config.read().rstrip())
-          if len(set(m.trail.items()) & set(cypher.items()))==len(cypher.items()):
+          if m.write==False and len(set(m.trail.items()) & set(cypher.items()))==len(cypher.items()):
             m.scenario=m.scenario[:m.scenario.index('/')+1]+str(int(m.scenario[m.scenario.index('/')+1:])+1)
             m.trail={}
             door='0.0:'
@@ -163,4 +195,9 @@ def main(stdscr):
         elif m.write==True: m.revise(m.adjacents[kc.index(k)])
       elif m.adjacents[kc.index(k)] in m.occupied: m.load(m.adjacents[kc.index(k)])
   os.system('setterm -cursor on')
+  with open('log','r+') as log:
+    f=log.readlines()
+    log.seek(0)
+    log.truncate()
+    log.write(''.join([f[0],f[1],'{}']))
 curses.wrapper(main)
