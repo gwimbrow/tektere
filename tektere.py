@@ -5,7 +5,6 @@ height,width=stdscr.getmaxyx()
 class message:
   def __init__(self):
     self.scenario='data/0'
-    self.verse=''
     self.mapped=False
     self.keys=[ 'w: up / s: down / tab: select / e: enter / q: quit','m: map / i: north, previous / l: east / k: south, next / j: west']
     with open('log') as log: self.trail=ast.literal_eval(log.readlines()[2].rstrip())
@@ -26,6 +25,7 @@ class message:
     self.textarea.bkgd(' ',curses.color_pair(4))
   def load(self,verse):
     self.verse=verse
+    self.trail[self.verse[:self.verse.index(':')+1]]=0
     if self.verse.endswith(':'):
       script=[''.join([self.verse,files]) for files in os.listdir('/'.join([self.scenario,self.verse[:self.verse.index(':')]]))]
       self.reset(len(script)+2,len(max(script,key=len)))
@@ -121,7 +121,7 @@ def main(stdscr):
     if k==ord('q'): break
     elif k==ord('\t') and len(m.links)>0: address,target=m.navigate()
     elif k==ord('e') and target!='':
-      m.trail[m.verse[:m.verse.index(':')+1]]=1
+      if address!=m.verse: m.trail[m.verse[:m.verse.index(':')+1]]=1
       m.load(address+target)
       address=''
       target=''
