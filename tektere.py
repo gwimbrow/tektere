@@ -4,7 +4,7 @@ stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
   def __init__(self):
-    self.scenario='0'
+    with open('log') as log: self.scenario=log.read().rstrip()
     self.mapped=False
     self.keys=[ 'w: scroll up / s: scroll down / tab: select / e: enter / q: quit','m: map / i: north, previous / l: east / k: south, next / j: west']
     self.trail={}
@@ -61,13 +61,13 @@ class message:
           if self.verse.endswith(':'): v=self.verse
           else: v=w[:w.index(':')+1]
           w=w[w.index(':')+1:]
-          self.textarea.addstr(y,x,w,curses.color_pair(2))
+          if len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,w,curses.color_pair(5))
+          else: self.textarea.addstr(y,x,w,curses.color_pair(2))
           self.links[self.count]=(y,x,v,w)
           self.count+=1
         else: self.textarea.addstr(y,x,w,curses.color_pair(1))
         x+=len(w)
       y+=1
-    with open('log','w') as log: log.write('\n'.join([self.scenario,self.verse,str(self.trail)]))
     self.count=0
   def navigate(self):
     ly,lx,lv,lw=self.links[self.count]
@@ -100,7 +100,7 @@ class message:
     for c in self.trail.keys():
       if self.trail[c]!=0:
         cy,cx=map(int,c[:-1].split('.'))
-        self.textarea.addch(vseq[cy],hseq[cx],curses.ACS_DIAMOND,curses.color_pair(4))
+        self.textarea.addch(vseq[cy],hseq[cx],curses.ACS_DIAMOND,curses.color_pair(5))
 m = message()
 def main(stdscr):
   curses.init_color(1,1000,1000,1000)
@@ -111,11 +111,12 @@ def main(stdscr):
   curses.init_pair(3,3,0) # selection, arrows
   curses.init_color(4,0,0,1000)
   curses.init_pair(4,4,0) # drawing
-  stdscr.bkgd(' ',curses.color_pair(4))
-  with open('log') as log: m.load(log.readlines()[1].rstrip())
+  curses.init_color(5,1000,800,0)
+  curses.init_pair(5,5,0) # prize
   address=''
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
+  m.load('1.1:')
   while True:
     m.textarea.refresh(m.ypos,0,max(3,(height/2)-(m.h/2)),(width/2)-(m.w/2),min(height-3,(height/2)+(m.h/2)),(width/2)+(m.w/2))
     k=m.textarea.getch()
@@ -124,7 +125,7 @@ def main(stdscr):
     elif k==ord('e') and target!='':
       if address!=m.verse: m.trail[m.verse[:m.verse.index(':')+1]]=1
       if len([d for d in m.trail.items() if d[1]==1])==8:
-        m.scenario='/'.join(['data',str(int(m.scenario)+1)])
+        m.scenario=str(int(m.scenario)+1)
         m.trail={}
         m.load('1.1:')
       else: m.load(address+target)
@@ -140,6 +141,6 @@ def main(stdscr):
     elif k in kc and m.adjacents[kc.index(k)] in m.occupied:
       m.trail[m.verse]=0
       m.load(m.adjacents[kc.index(k)])
-  with open('log','w') as log: log.write('\n'.join([m.scenario,'1.1:','{}']))
+  with open('log','w') as log: log.write(m.scenario)
   os.system('setterm -cursor on')
 curses.wrapper(main)
