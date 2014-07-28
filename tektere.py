@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys,os,re,curses
+import sys,os,re,random,curses
 stdscr=curses.initscr()
 height,width=stdscr.getmaxyx()
 class message:
@@ -65,6 +65,7 @@ class message:
           else: self.textarea.addstr(y,x,w,curses.color_pair(2))
           self.links[self.count]=(y,x,v,w)
           self.count+=1
+        elif w.startswith('[') and w.endswith(']'): self.textarea.addstr(y,x,w,curses.color_pair(6))
         else: self.textarea.addstr(y,x,w,curses.color_pair(1))
         x+=len(w)
       y+=1
@@ -113,6 +114,8 @@ def main(stdscr):
   curses.init_pair(4,4,0) # drawing
   curses.init_color(5,1000,800,0)
   curses.init_pair(5,5,0) # prize
+  curses.init_color(6,600,600,600)
+  curses.init_pair(6,6,6) # redaction
   address=''
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
@@ -125,7 +128,7 @@ def main(stdscr):
     elif k==ord('e') and target!='':
       if address!=m.verse: m.trail[m.verse[:m.verse.index(':')+1]]=1
       if len([d for d in m.trail.items() if d[1]==1])==8:
-        m.scenario=str(int(m.scenario)+1)
+        m.scenario=random.choice(os.listdir('data'))
         m.trail={}
         m.load('1.1:')
       else: m.load(address+target)
