@@ -6,7 +6,6 @@ class message:
   def __init__(self):
     with open('log') as log: self.scenario=log.read().rstrip()
     self.mapped=False
-    self.keys=[ 'w: scroll up / s: scroll down / tab: select / e: enter / q: quit','m: map / i: north, previous / l: east / k: south, next / j: west']
     self.trail={}
   def reset(self,h,w):
     os.system('setterm -cursor off')
@@ -19,9 +18,7 @@ class message:
     if 'textarea' in locals(): del self.textarea
     stdscr.clear()
     stdscr.bkgd(' ',curses.color_pair(4))
-    stdscr.addstr(0,1,'/'.join([self.scenario,self.verse]))
-    stdscr.addstr(height-1,1,self.keys[0])
-    stdscr.addstr(height-1,width-len(self.keys[1])-1,self.keys[1])
+    stdscr.addstr(height-1,width-132,'tab: select / e: enter / m: map / q: quit / w: scroll up / s: scroll down / i: north, previous / l: east / k: south, next / j: west')
     self.textarea=curses.newpad(self.h,self.w)
     self.textarea.bkgd(' ',curses.color_pair(4))
   def load(self,verse):
@@ -33,12 +30,12 @@ class message:
       else: script=[''.join([self.verse,files]) for files in os.listdir('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')]]))]
       self.reset(len(script),len(max(script,key=len)))
       c=map(int,self.verse[:-1].split('.'))
-      self.occupied=[names+':' for names in os.listdir('/'.join(['data',self.scenario])) if names!='1.1']
+      self.occupied=[names+':' for names in os.listdir('/'.join(['data',self.scenario]))]
       self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
-      arrows={0:(2,width/2),1:(height/2,width-4),2:(height-2,width/2),3:(height/2,4)}
+      arrows={0:(0,2),1:(1,4),2:(2,2),3:(1,0)}
       for adj in [a for a in self.adjacents if '-' not in a]:
         y,x=arrows[self.adjacents.index(adj)]
-        if adj in self.occupied: stdscr.addch(y,x,curses.ACS_DIAMOND,curses.color_pair(3))
+        if adj in self.occupied: stdscr.addch(y,x,curses.ACS_DIAMOND)
     else:
       with open('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')],self.verse[self.verse.index(':')+1:]])) as choice: script=choice.readlines()
       self.reset(len(script),len(max(script,key=len)))
@@ -50,7 +47,7 @@ class message:
       if self.occupied.index(self.verse)==len(self.occupied)-1: adv=' '
       else:
         adv=self.occupied[self.occupied.index(self.verse)+1]
-        stdscr.addch(height-2,width/2,curses.ACS_DIAMOND,curses.color_pair(3))
+        stdscr.addch(height-2,width/2,curses.ACS_DIAMOND)
       self.adjacents=[prev,' ',adv,' ']
     stdscr.refresh()
     y=0
@@ -58,21 +55,17 @@ class message:
       x=0
       for w in re.split('(\s+)',s.rstrip()):
         if ':' in w and w[:w.index(':')] in [names for names in os.listdir('/'.join(['data',self.scenario]))]:
-          if self.verse.endswith(':'): v=self.verse
-          else: v=w[:w.index(':')+1]
-          w=w[w.index(':')+1:]
+          lp=w.split(':')
           if len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,w,curses.color_pair(5))
-          else: self.textarea.addstr(y,x,w,curses.color_pair(2))
-          self.links[self.count]=(y,x,v,w)
+          else: self.textarea.addstr(y,x,lp[1],curses.color_pair(2))
+          self.links[self.count]=(y,x,lp[0]+':',lp[1])
           self.count+=1
-        elif w.startswith('[') and w.endswith(']'): self.textarea.addstr(y,x,w,curses.color_pair(6))
         else: self.textarea.addstr(y,x,w,curses.color_pair(1))
         x+=len(w)
       y+=1
     self.count=0
   def navigate(self):
-    ly,lx,lv,lw=self.links[self.count]
-    self.textarea.chgat(ly,lx,len(lw),curses.color_pair(3))
+    self.textarea.chgat(self.links[self.count][0],self.links[self.count][1],len(self.links[self.count][3]),curses.color_pair(3))
     if self.selection!=() and self.selection!=self.links[self.count]: self.textarea.chgat(self.selection[0],self.selection[1],len(self.selection[3]),curses.color_pair(2))
     self.selection=self.links[self.count]
     if self.count<len(self.links)-1: self.count+=1
@@ -80,12 +73,10 @@ class message:
     return self.selection[2],self.selection[3]
   def grid(self):
     self.mapped=True
-    self.reset(10,20)
+    self.reset(9,18)
     stdscr.refresh()
-    vseq=[2,5,8]
-    hseq=[4,10,16]
-    for v in vseq: self.textarea.addstr(v,0,str(vseq.index(v)))
-    for h in hseq: self.textarea.addstr(0,h,str(hseq.index(h)))
+    vseq=[1,4,7]
+    hseq=[2,8,14]
     for c in [(vul-1,hul-1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
     for c in [(vul-1,hul) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
     for c in [(vul-1,hul+1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
@@ -114,8 +105,6 @@ def main(stdscr):
   curses.init_pair(4,4,0) # drawing
   curses.init_color(5,1000,800,0)
   curses.init_pair(5,5,0) # prize
-  curses.init_color(6,600,600,600)
-  curses.init_pair(6,6,6) # redaction
   address=''
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
