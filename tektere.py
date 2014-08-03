@@ -25,41 +25,39 @@ class message:
     self.verse=verse
     self.trail[self.verse[:self.verse.index(':')+1]]=0
     if self.verse.endswith(':'):
-      if self.verse=='1.1:':
-        with open('/'.join(['data',self.scenario,'1.1','scene'])) as choice: script=choice.readlines()
-      else: script=[''.join([self.verse,files]) for files in os.listdir('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')]]))]
+      with open('/'.join(['data',self.scenario,self.verse[:-1],'scene'])) as choice: script=choice.readlines()
       self.reset(len(script),len(max(script,key=len)))
-      c=map(int,self.verse[:-1].split('.'))
-      self.occupied=[names+':' for names in os.listdir('/'.join(['data',self.scenario]))]
-      self.adjacents=['.'.join(map(str,[c[0]-1,c[1]]))+':','.'.join(map(str,[c[0],c[1]+1]))+':','.'.join(map(str,[c[0]+1,c[1]]))+':','.'.join(map(str,[c[0],c[1]-1]))+':']
-      arrows={0:(0,2),1:(1,4),2:(2,2),3:(1,0)}
-      for adj in [a for a in self.adjacents if '-' not in a]:
-        y,x=arrows[self.adjacents.index(adj)]
-        if adj in self.occupied: stdscr.addch(y,x,curses.ACS_DIAMOND)
+      cy,cx=map(int,self.verse[:-1].split('.'))
+      self.adjacents=['.'.join(map(str,[cy-1,cx]))+':','.'.join(map(str,[cy,cx+1]))+':','.'.join(map(str,[cy+1,cx]))+':','.'.join(map(str,[cy,cx-1]))+':']
+      self.occupied=[''.join([names,':']) for names in os.listdir('/'.join(['data',self.scenario]))]
     else:
       with open('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')],self.verse[self.verse.index(':')+1:]])) as choice: script=choice.readlines()
       self.reset(len(script),len(max(script,key=len)))
-      self.occupied=[':'.join([self.verse[:self.verse.index(':')],files]) for files in os.listdir('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')]]))]
+      self.occupied=[':'.join([self.verse[:self.verse.index(':')],files]) for files in os.listdir('/'.join(['data',self.scenario,self.verse[:self.verse.index(':')]])) if files!='scene']
       if self.occupied.index(self.verse)==0: prev=' '
-      else:
-        prev=self.occupied[self.occupied.index(self.verse)-1]
-        stdscr.addch(2,width/2,curses.ACS_DIAMOND,curses.color_pair(3))
+      else: prev=self.occupied[self.occupied.index(self.verse)-1]
       if self.occupied.index(self.verse)==len(self.occupied)-1: adv=' '
-      else:
-        adv=self.occupied[self.occupied.index(self.verse)+1]
-        stdscr.addch(height-2,width/2,curses.ACS_DIAMOND)
+      else: adv=self.occupied[self.occupied.index(self.verse)+1]
       self.adjacents=[prev,' ',adv,' ']
+    for adj in [a for a in self.adjacents if '-' not in a]:
+      y,x={0:(0,2),1:(1,4),2:(2,2),3:(1,0)}[self.adjacents.index(adj)]
+      if adj in self.occupied: stdscr.addch(y,x,curses.ACS_DIAMOND)
     stdscr.refresh()
     y=0
     for s in script:
       x=0
       for w in re.split('(\s+)',s.rstrip()):
-        if ':' in w and w[:w.index(':')] in [names for names in os.listdir('/'.join(['data',self.scenario]))]:
+        if w.endswith(':'):
+          self.textarea.addstr(y,x,w[:-1],curses.color_pair(2))
+          self.links[self.count]=(y,x,w,w[:-1])
+          self.count+=1
+        elif ':' in w and w[:w.index(':')] in [names for names in os.listdir('/'.join(['data',self.scenario]))]:
           lp=w.split(':')
-          if len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,w,curses.color_pair(5))
+          if len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,lp[1],curses.color_pair(5))
           else: self.textarea.addstr(y,x,lp[1],curses.color_pair(2))
           self.links[self.count]=(y,x,lp[0]+':',lp[1])
           self.count+=1
+        elif w.startswith('[') and w.endswith(']'): self.textarea.addstr(y,x,w,curses.color_pair(6))
         else: self.textarea.addstr(y,x,w,curses.color_pair(1))
         x+=len(w)
       y+=1
@@ -73,26 +71,17 @@ class message:
     return self.selection[2],self.selection[3]
   def grid(self):
     self.mapped=True
-    self.reset(9,18)
+    self.reset(11,22)
     stdscr.refresh()
-    vseq=[1,4,7]
-    hseq=[2,8,14]
-    for c in [(vul-1,hul-1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul-1,hul) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul-1,hul+1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul-1,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_URCORNER)
-    for c in [(vul,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_VLINE)
-    for c in [(vul+1,hul+2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_LRCORNER)
-    for c in [(vul+1,hul-1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul+1,hul) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul+1,hul+1) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_HLINE)
-    for c in [(vul+1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_LLCORNER)
-    for c in [(vul,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_VLINE)
-    for c in [(vul-1,hul-2) for vul in vseq for hul in hseq]: self.textarea.addch(c[0],c[1],curses.ACS_ULCORNER)
+    vseq=[1,5,9]
+    hseq=[2,10,18]
+    cy,cx=map(int,self.verse[:self.verse.index(':')].split('.'))
+    self.textarea.addstr(vseq[cy],hseq[cx]-1,self.verse[:self.verse.index(':')],curses.color_pair(2))
+    self.links[len(self.links)]=(vseq[cy],hseq[cx]-1,self.verse[:self.verse.index(':')+1],self.verse[:self.verse.index(':')])
     for c in self.trail.keys():
       if self.trail[c]!=0:
         cy,cx=map(int,c[:-1].split('.'))
-        self.textarea.addch(vseq[cy],hseq[cx],curses.ACS_DIAMOND,curses.color_pair(5))
+        self.textarea.addstr(vseq[cy],hseq[cx]-1,c[:-1],curses.color_pair(5))
 m = message()
 def main(stdscr):
   curses.init_color(1,1000,1000,1000)
@@ -100,11 +89,13 @@ def main(stdscr):
   curses.init_color(2,1000,0,0)
   curses.init_pair(2,2,0) # link
   curses.init_color(3,0,1000,0)
-  curses.init_pair(3,3,0) # selection, arrows
+  curses.init_pair(3,3,0) # selection
   curses.init_color(4,0,0,1000)
-  curses.init_pair(4,4,0) # drawing
+  curses.init_pair(4,4,0) # interface
   curses.init_color(5,1000,800,0)
   curses.init_pair(5,5,0) # prize
+  curses.init_color(6,500,500,500)
+  curses.init_pair(6,6,6) # redacted
   address=''
   target=''
   kc=[ord('i'),ord('l'),ord('k'),ord('j')]
@@ -120,14 +111,13 @@ def main(stdscr):
         m.scenario=random.choice(os.listdir('data'))
         m.trail={}
         m.load('1.1:')
+      elif address==target+':':
+        if m.mapped==True: m.mapped=False
+        m.load(address)
       else: m.load(address+target)
       address=''
       target=''
-    elif k==ord('m'):
-      if m.mapped==False: m.grid()
-      else:
-        m.mapped=False
-        m.load(m.verse)
+    elif k==ord('m') and m.mapped==False: m.grid()
     elif k==ord('s') and m.ypos+height-4<m.h: m.ypos+=1
     elif k==ord('w') and 0<m.ypos: m.ypos-=1
     elif k in kc and m.adjacents[kc.index(k)] in m.occupied:
