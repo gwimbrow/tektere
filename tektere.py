@@ -48,13 +48,13 @@ class message:
       x=0
       for w in re.split('(\s+)',s.rstrip()):
         if w.endswith(':'):
-          self.textarea.addstr(y,x,w[:-1],curses.color_pair(2))
+          if w[:-1]=='1.1' and len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,w[:-1],curses.color_pair(5))
+          else: self.textarea.addstr(y,x,w[:-1],curses.color_pair(2))
           self.links[self.count]=(y,x,w,w[:-1])
           self.count+=1
         elif ':' in w and w[:w.index(':')] in [names for names in os.listdir('/'.join(['data',self.scenario]))]:
           lp=w.split(':')
-          if len([d for d in m.trail.items() if d[1]==1])==7: self.textarea.addstr(y,x,lp[1],curses.color_pair(5))
-          else: self.textarea.addstr(y,x,lp[1],curses.color_pair(2))
+          self.textarea.addstr(y,x,lp[1],curses.color_pair(2))
           self.links[self.count]=(y,x,lp[0]+':',lp[1])
           self.count+=1
         elif w.startswith('[') and w.endswith(']'): self.textarea.addstr(y,x,w,curses.color_pair(6))
@@ -77,7 +77,7 @@ class message:
     hseq=[2,10,18]
     cy,cx=map(int,self.verse[:self.verse.index(':')].split('.'))
     self.textarea.addstr(vseq[cy],hseq[cx]-1,self.verse[:self.verse.index(':')],curses.color_pair(2))
-    self.links[len(self.links)]=(vseq[cy],hseq[cx]-1,self.verse[:self.verse.index(':')+1],self.verse[:self.verse.index(':')])
+    self.links[0]=(vseq[cy],hseq[cx]-1,self.verse[:self.verse.index(':')+1],self.verse[:self.verse.index(':')])
     for c in self.trail.keys():
       if self.trail[c]!=0:
         cy,cx=map(int,c[:-1].split('.'))
@@ -107,7 +107,7 @@ def main(stdscr):
     elif k==ord('\t') and len(m.links)>0: address,target=m.navigate()
     elif k==ord('e') and target!='':
       if address!=m.verse: m.trail[m.verse[:m.verse.index(':')+1]]=1
-      if len([d for d in m.trail.items() if d[1]==1])==8:
+      if target=='1.1' and len([d for d in m.trail.items() if d[1]==1])==8:
         m.scenario=random.choice(os.listdir('data'))
         m.trail={}
         m.load('1.1:')
