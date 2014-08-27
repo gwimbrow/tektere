@@ -1,6 +1,0 @@
-Each subdirectory of the data/ tree represents a location on a two-dimensional plane using a cartensian coordinate system.
-Each file in the data/ subdirectories is a mesage transcript recorded at that location.
-
-The user is offered some control: the 'w a s d' keys allow the user to scroll and pan the text frame, if the frame is larger than the screen.
-The user can also use the 'i l k j' keys to navigate to locations north, east, south, and west (the x and y axis.)
-Additionally, the 'i' and 'k' keys allow for navigating between files at each location (the z-axis.)
