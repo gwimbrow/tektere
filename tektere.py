@@ -46,12 +46,12 @@ class message:
     x=[0,-1]
     for cmb in calc:
       corner='.'.join([cmb[0][x[0]],cmb[1][x[1]]])
-      x=x[::-1]
       saught=tuple(map(lambda di: min(di),zip(self.trigrams[self.config[self.cells[cmb[0]]][3]],self.trigrams[self.config[self.cells[cmb[1]]][3]])))
       for name,val in self.config.iteritems():
         if val[3]==self.trigrams.index(saught): self.cells[corner]=name
+      x=x[::-1]
   def drawinterface(self):
-    stdscr.addstr(height-1,width-89,'w: up / a: left / s: down / d: right / i: north / j: west/ k: south / l: east / q: quit')
+    stdscr.addstr(height-1,width-88,'w: up / a: left / s: down / d: right / i: north / j: west/ k: south / l: east / q: quit')
     r,g,b,t=self.config[self.cells[self.cell]]
     if self.cell=='1.1': stdscr.addstr(height-1,1,'tab: highlight / e: select')
     else:
@@ -61,10 +61,10 @@ class message:
       stdscr.attron(curses.color_pair(1))
     stdscr.addch(5,5,curses.ACS_DIAMOND)
     for l in range(len(self.trigrams[t])):
-      if self.trigrams[t][l]==1: stdscr.hline(l,1,curses.ACS_BULLET,9)
+      if self.trigrams[t][l]==1: stdscr.hline(l,1,curses.ACS_BLOCK,9)
       else:
-        stdscr.hline(l,1,curses.ACS_BULLET,4)
-        stdscr.hline(l,6,curses.ACS_BULLET,4)
+        stdscr.hline(l,1,curses.ACS_BLOCK,4)
+        stdscr.hline(l,6,curses.ACS_BLOCK,4)
     cy,cx=map(int,self.cell.split('.'))
     self.adjacents=['.'.join(map(str,[cy-1,cx])),'.'.join(map(str,[cy,cx+1])),'.'.join(map(str,[cy+1,cx])),'.'.join(map(str,[cy,cx-1]))]
     for adj in [a for a in self.adjacents if a in self.cells.keys()]:
