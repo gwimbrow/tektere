@@ -5,8 +5,8 @@ height,width=stdscr.getmaxyx()
 class message:
   def __init__(self):
     self.cardinals=['0.1','1.2','2.1','1.0']
-    self.trigrams=[(1,1,1),(2,1,1),(1,2,1),(2,2,1),(1,1,2),(2,1,2),(1,2,2),(2,2,2)]
-    self.config={'null':(500,500,500,7)}
+    self.trigrams=[(),(1,1,1),(2,1,1),(1,2,1),(2,2,1),(1,1,2),(2,1,2),(1,2,2),(2,2,2)]
+    self.config={'null':(500,500,500,0)}
     for f in os.listdir('data'):
       with open('/'.join(['data',f])) as file: self.config[f]=ast.literal_eval(file.readline().rstrip())
   def load(self,cell):
@@ -20,7 +20,6 @@ class message:
     if self.cell=='1.1':
       self.links={}
       self.selected=()
-      curses.init_pair(1,curses.COLOR_WHITE,0)
       self.cells={'1.1':'null'}
       script=[f for f in self.config.keys() if f!='null']
     else:
@@ -33,9 +32,9 @@ class message:
       x=0
       for w in re.split('(\s+)',s.rstrip()):
         if self.cell=='1.1':
-          self.links[self.count]=(y,x,w,curses.color_pair(1))
+          self.links[self.count]=(y,x,w,curses.color_pair(0))
           self.count+=1
-        self.textarea.addstr(y,x,w,curses.color_pair(1))
+        self.textarea.addstr(y,x,w,curses.color_pair(0))
         x+=len(w)
       y+=1
     self.count=0
@@ -46,10 +45,10 @@ class message:
     x=[0,-1]
     for cmb in calc:
       corner='.'.join([cmb[0][x[0]],cmb[1][x[1]]])
+      x=x[::-1]
       saught=tuple(map(lambda di: min(di),zip(self.trigrams[self.config[self.cells[cmb[0]]][3]],self.trigrams[self.config[self.cells[cmb[1]]][3]])))
       for name,val in self.config.iteritems():
-        if val[3]==self.trigrams.index(saught): self.cells[corner]=name
-      x=x[::-1]
+        if val[3]==self.trigrams.index(saught) and name not in self.cells.values(): self.cells[corner]=name
   def drawinterface(self):
     stdscr.addstr(height-1,width-88,'w: up / a: left / s: down / d: right / i: north / j: west/ k: south / l: east / q: quit')
     r,g,b,t=self.config[self.cells[self.cell]]
@@ -59,16 +58,16 @@ class message:
       curses.init_color(1,r,g,b)
       curses.init_pair(1,1,0)
       stdscr.attron(curses.color_pair(1))
-    stdscr.addch(5,5,curses.ACS_DIAMOND)
+    stdscr.addch(1,3,curses.ACS_DIAMOND)
     for l in range(len(self.trigrams[t])):
-      if self.trigrams[t][l]==1: stdscr.hline(l,1,curses.ACS_BLOCK,9)
+      if self.trigrams[t][l]==1: stdscr.vline(height/2,width-(2+l*2),curses.ACS_BLOCK,3)
       else:
-        stdscr.hline(l,1,curses.ACS_BLOCK,4)
-        stdscr.hline(l,6,curses.ACS_BLOCK,4)
+        stdscr.vline(height/2,width-(2+l*2),curses.ACS_BLOCK,1)
+        stdscr.vline(height/2+2,width-(2+l*2),curses.ACS_BLOCK,1)
     cy,cx=map(int,self.cell.split('.'))
     self.adjacents=['.'.join(map(str,[cy-1,cx])),'.'.join(map(str,[cy,cx+1])),'.'.join(map(str,[cy+1,cx])),'.'.join(map(str,[cy,cx-1]))]
     for adj in [a for a in self.adjacents if a in self.cells.keys()]:
-      y,x={0:(4,5),1:(5,7),2:(6,5),3:(5,3)}[self.adjacents.index(adj)]
+      y,x={0:(0,3),1:(1,5),2:(2,3),3:(1,1)}[self.adjacents.index(adj)]
       if self.cell=='1.1':
         for num,val in self.links.iteritems():
           if val[2]==self.cells[adj]: color=val[3]
