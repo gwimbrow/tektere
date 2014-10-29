@@ -21,7 +21,7 @@ class carto:
     for n in range(0,len(script)):
       x=0
       for b in list(script[n].rstrip()):
-        self.area.chgat(n,x,2,curses.color_pair(int(b)))
+        if b!=' ': self.area.chgat(n,x,2,curses.color_pair(int(b)))
         x+=2
     stdscr.refresh()
 m = carto()
