@@ -10,7 +10,7 @@ class carto:
     with open('source') as choice:
       config=ast.literal_eval(choice.readline())
       self.script=choice.readlines()
-    self.rate,self.mod=config[0]
+    self.rate=config[0]
     self.frames=[self.script.index(f) for f in self.script if f.startswith('f')]
     self.h=len(self.script[self.frames[0]+1:self.frames[1]])
     self.w=(len(max(self.script,key=len))-1)*2
@@ -37,7 +37,7 @@ def main(stdscr):
   os.system('setterm -cursor off')
   m.load()
   while True:
-    time.sleep(m.rate*(random.random()/m.mod))
+    time.sleep(m.rate)
     stdscr.clear()
     m.update()
     k=m.area.getch()
