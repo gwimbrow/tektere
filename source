@@ -1,155 +1,155 @@
-(50,6,12)
+(62,6,25)
 #
-abcdefghijkl
-bcdefghijklk
-cdefghijklkj
-defghijklkji
-efghijklkjih
-fghijklkjihg
+abcdefghijkl kjihgfedcbab
+bcdefghijklk jihgfedcbabc
+cdefghijklkj ihgfedcbabcd
+defghijklkji hgfedcbabcde
+efghijklkjih gfedcbabcdef
+fghijklkjihg fedcbabcdefg
 #
-bcdefghijklk
-cdefghijklkj
-defghijklkji
-efghijklkjih
-fghijklkjihg
-ghijklkjihgf
+bcdefghijklk jihgfedcbabc
+cdefghijklkj ihgfedcbabcd
+defghijklkji hgfedcbabcde
+efghijklkjih gfedcbabcdef
+fghijklkjihg fedcbabcdefg
+ghijklkjihgf edcbabcdefgh
 #
-cdefghijklkj
-defghijklkji
-efghijklkjih
-fghijklkjihg
-ghijklkjihgf
-hijklkjihgfe
+cdefghijklkj ihgfedcbabcd
+defghijklkji hgfedcbabcde
+efghijklkjih gfedcbabcdef
+fghijklkjihg fedcbabcdefg
+ghijklkjihgf edcbabcdefgh
+hijklkjihgfe dcbabcdefghi
 #
-defghijklkji
-efghijklkjih
-fghijklkjihg
-ghijklkjihgf
-hijklkjihgfe
-ijklkjihgfed
+defghijklkji hgfedcbabcde
+efghijklkjih gfedcbabcdef
+fghijklkjihg fedcbabcdefg
+ghijklkjihgf edcbabcdefgh
+hijklkjihgfe dcbabcdefghi
+ijklkjihgfed cbabcdefghij
 #
-efghijklkjih
-fghijklkjihg
-ghijklkjihgf
-hijklkjihgfe
-ijklkjihgfed
-jklkjihgfedc
+efghijklkjih gfedcbabcdef
+fghijklkjihg fedcbabcdefg
+ghijklkjihgf edcbabcdefgh
+hijklkjihgfe dcbabcdefghi
+ijklkjihgfed cbabcdefghij
+jklkjihgfedc babcdefghijk
 #
-fghijklkjihg
-ghijklkjihgf
-hijklkjihgfe
-ijklkjihgfed
-jklkjihgfedc
-klkjihgfedcb
+fghijklkjihg fedcbabcdefg
+ghijklkjihgf edcbabcdefgh
+hijklkjihgfe dcbabcdefghi
+ijklkjihgfed cbabcdefghij
+jklkjihgfedc babcdefghijk
+klkjihgfedcb abcdefghijkl
 #
-ghijklkjihgf
-hijklkjihgfe
-ijklkjihgfed
-jklkjihgfedc
-klkjihgfedcb
-lkjihgfedcba
+ghijklkjihgf edcbabcdefgh
+hijklkjihgfe dcbabcdefghi
+ijklkjihgfed cbabcdefghij
+jklkjihgfedc babcdefghijk
+klkjihgfedcb abcdefghijkl
+lkjihgfedcba bcdefghijklk
 #
-hijklkjihgfe
-ijklkjihgfed
-jklkjihgfedc
-klkjihgfedcb
-lkjihgfedcba
-kjihgfedcbab
+hijklkjihgfe dcbabcdefghi
+ijklkjihgfed cbabcdefghij
+jklkjihgfedc babcdefghijk
+klkjihgfedcb abcdefghijkl
+lkjihgfedcba bcdefghijklk
+kjihgfedcbab cdefghijklkj
 #
-ijklkjihgfed
-jklkjihgfedc
-klkjihgfedcb
-lkjihgfedcba
-kjihgfedcbab
-jihgfedcbabc
+ijklkjihgfed cbabcdefghij
+jklkjihgfedc babcdefghijk
+klkjihgfedcb abcdefghijkl
+lkjihgfedcba bcdefghijklk
+kjihgfedcbab cdefghijklkj
+jihgfedcbabc defghijklkji
 #
-jklkjihgfedc
-klkjihgfedcb
-lkjihgfedcba
-kjihgfedcbab
-jihgfedcbabc
-ihgfedcbabcd
+jklkjihgfedc babcdefghijk
+klkjihgfedcb abcdefghijkl
+lkjihgfedcba bcdefghijklk
+kjihgfedcbab cdefghijklkj
+jihgfedcbabc defghijklkji
+ihgfedcbabcd efghijklkjih
 #
-klkjihgfedcb
-lkjihgfedcba
-kjihgfedcbab
-jihgfedcbabc
-ihgfedcbabcd
-hgfedcbabcde
+klkjihgfedcb abcdefghijkl
+lkjihgfedcba bcdefghijklk
+kjihgfedcbab cdefghijklkj
+jihgfedcbabc defghijklkji
+ihgfedcbabcd efghijklkjih
+hgfedcbabcde fghijklkjihg
 #
-lkjihgfedcba
-kjihgfedcbab
-jihgfedcbabc
-ihgfedcbabcd
-hgfedcbabcde
-gfedcbabcdef
+lkjihgfedcba bcdefghijklk
+kjihgfedcbab cdefghijklkj
+jihgfedcbabc defghijklkji
+ihgfedcbabcd efghijklkjih
+hgfedcbabcde fghijklkjihg
+gfedcbabcdef ghijklkjihgf
 #
-kjihgfedcbab
-jihgfedcbabc
-ihgfedcbabcd
-hgfedcbabcde
-gfedcbabcdef
-fedcbabcdefg
+kjihgfedcbab cdefghijklkj
+jihgfedcbabc defghijklkji
+ihgfedcbabcd efghijklkjih
+hgfedcbabcde fghijklkjihg
+gfedcbabcdef ghijklkjihgf
+fedcbabcdefg hijklkjihgfe
 #
-jihgfedcbabc
-ihgfedcbabcd
-hgfedcbabcde
-gfedcbabcdef
-fedcbabcdefg
-edcbabcdefgh
+jihgfedcbabc defghijklkji
+ihgfedcbabcd efghijklkjih
+hgfedcbabcde fghijklkjihg
+gfedcbabcdef ghijklkjihgf
+fedcbabcdefg hijklkjihgfe
+edcbabcdefgh ijklkjihgfed
 #
-ihgfedcbabcd
-hgfedcbabcde
-gfedcbabcdef
-fedcbabcdefg
-edcbabcdefgh
-dcbabcdefghi
+ihgfedcbabcd efghijklkjih
+hgfedcbabcde fghijklkjihg
+gfedcbabcdef ghijklkjihgf
+fedcbabcdefg hijklkjihgfe
+edcbabcdefgh ijklkjihgfed
+dcbabcdefghi jklkjihgfedc
 #
-hgfedcbabcde
-gfedcbabcdef
-fedcbabcdefg
-edcbabcdefgh
-dcbabcdefghi
-cbabcdefghij
+hgfedcbabcde fghijklkjihg
+gfedcbabcdef ghijklkjihgf
+fedcbabcdefg hijklkjihgfe
+edcbabcdefgh ijklkjihgfed
+dcbabcdefghi jklkjihgfedc
+cbabcdefghij klkjihgfedcb
 #
-gfedcbabcdef
-fedcbabcdefg
-edcbabcdefgh
-dcbabcdefghi
-cbabcdefghij
-babcdefghijk
+gfedcbabcdef ghijklkjihgf
+fedcbabcdefg hijklkjihgfe
+edcbabcdefgh ijklkjihgfed
+dcbabcdefghi jklkjihgfedc
+cbabcdefghij klkjihgfedcb
+babcdefghijk lkjihgfedcba
 #
-fedcbabcdefg
-edcbabcdefgh
-dcbabcdefghi
-cbabcdefghij
-babcdefghijk
-abcdefghijkl
+fedcbabcdefg hijklkjihgfe
+edcbabcdefgh ijklkjihgfed
+dcbabcdefghi jklkjihgfedc
+cbabcdefghij klkjihgfedcb
+babcdefghijk lkjihgfedcba
+abcdefghijkl kjihgfedcbab
 #
-edcbabcdefgh
-dcbabcdefghi
-cbabcdefghij
-babcdefghijk
-abcdefghijkl
-bcdefghijklk
+edcbabcdefgh ijklkjihgfed
+dcbabcdefghi jklkjihgfedc
+cbabcdefghij klkjihgfedcb
+babcdefghijk lkjihgfedcba
+abcdefghijkl kjihgfedcbab
+bcdefghijklk jihgfedcbabc
 #
-dcbabcdefghi
-cbabcdefghij
-babcdefghijk
-abcdefghijkl
-bcdefghijklk
-cdefghijklkj
+dcbabcdefghi jklkjihgfedc
+cbabcdefghij klkjihgfedcb
+babcdefghijk lkjihgfedcba
+abcdefghijkl kjihgfedcbab
+bcdefghijklk jihgfedcbabc
+cdefghijklkj ihgfedcbabcd
 #
-cbabcdefghij
-babcdefghijk
-abcdefghijkl
-bcdefghijklk
-cdefghijklkj
-defghijklkji
+cbabcdefghij klkjihgfedcb
+babcdefghijk lkjihgfedcba
+abcdefghijkl kjihgfedcbab
+bcdefghijklk jihgfedcbabc
+cdefghijklkj ihgfedcbabcd
+defghijklkji hgfedcbabcde
 #
-babcdefghijk
-abcdefghijkl
-bcdefghijklk
-cdefghijklkj
-defghijklkji
-efghijklkjih
+babcdefghijk lkjihgfedcba
+abcdefghijkl kjihgfedcbab
+bcdefghijklk jihgfedcbabc
+cdefghijklkj ihgfedcbabcd
+defghijklkji hgfedcbabcde
+efghijklkjih gfedcbabcdef
