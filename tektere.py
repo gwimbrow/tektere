@@ -21,10 +21,10 @@ class carto:
       for l in range(len(line)-1):
         for group in [map(str,g) for g in self.config[1:] if line[l] in map(str,g)]:
           self.area.addstr(i-self.keyframes[self.fc],l,line[l],curses.color_pair(1))
-          if group.index(line[l])<len(group)-2: n=group[group.index(line[l])+1]
+          if group.index(line[l])<len(group)-1: n=group[group.index(line[l])+1]
           else: n=group[0]
           line[l]=n
-    self.script[i]=''.join(line)
+      self.script[i]=''.join(line)
     if self.fc<len(self.keyframes)-1: self.fc+=1
     else: self.fc=0
     self.area.refresh((self.h-height)/2,(self.w-width)/2,max(0,(height-self.h)/2),max(0,(width-self.w)/2),min(height,(height+self.h)/2)-1,min(width,(width+self.w)/2)-1)
