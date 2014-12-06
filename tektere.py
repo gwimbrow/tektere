@@ -10,6 +10,10 @@ class carto:
       self.config=ast.literal_eval(choice.readline())
       self.script=choice.readlines()
     self.rate,self.h,self.w=self.config[0]
+    for c in range(1,3):
+      r,g,b=self.config[c]
+      curses.init_color(c,r,g,b)
+      curses.init_pair(c,c,c-1)
     self.area=curses.newpad(self.h+1,self.w+1)
     self.area.timeout(self.rate)
     self.keyframes=[]
@@ -19,8 +23,8 @@ class carto:
     for i in range(self.keyframes[self.fc],self.keyframes[self.fc]+self.h):
       line=list(self.script[i])
       for l in range(len(line)-1):
-        for group in [map(str,g) for g in self.config[1:] if line[l] in map(str,g)]:
-          self.area.addstr(i-self.keyframes[self.fc],l,line[l],curses.color_pair(1))
+        for group in [map(str,g) for g in self.config[3:] if line[l] in map(str,g)]:
+          self.area.addstr(i-self.keyframes[self.fc],l,line[l],curses.color_pair(2))
           if group.index(line[l])<len(group)-1: n=group[group.index(line[l])+1]
           else: n=group[0]
           line[l]=n
@@ -30,8 +34,6 @@ class carto:
     self.area.refresh((self.h-height)/2,(self.w-width)/2,max(0,(height-self.h)/2),max(0,(width-self.w)/2),min(height,(height+self.h)/2)-1,min(width,(width+self.w)/2)-1)
 m = carto()
 def main(stdscr):
-  curses.init_color(1,1000,1000,1000)
-  curses.init_pair(1,1,0)
   curses.curs_set(0)
   m.load()
   while True:
