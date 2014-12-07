@@ -13,7 +13,7 @@ class carto:
     for c in range(1,3):
       r,g,b=self.config[c]
       curses.init_color(c,r,g,b)
-      curses.init_pair(c,c,c-1)
+      curses.init_pair(c,c-1,c)
     self.area=curses.newpad(self.h+1,self.w+1)
     self.area.timeout(self.rate)
     self.keyframes=[]
