@@ -1,1 +1,3 @@
- 
+# Tektere
+
+requires ncurses
