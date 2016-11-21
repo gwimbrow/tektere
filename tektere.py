@@ -23,46 +23,29 @@ class carto:
   def load(self):
 
     with open(sys.argv[1]) as choice:
+      font, rate, bg, fg = ast.literal_eval(choice.readline())
+      self.script = choice.readlines()
+      for i in range(len(self.script)):
+        self.script[i] = list(self.script[i].rstrip())
 
-      rate, font = ast.literal_eval(choice.readline())
-      self.script=choice.readlines()
-      self.h = len(self.script)
-      self.w = len(self.script[0])
-
-    os.system('setfont ' + font + '.psf')
-
-    with open(font) as defs:
-
-      colors = ast.literal_eval(defs.readline()) # a list of two color tuples
-      self.seqs = defs.readlines() # lists of animation sequences
-
-    for c in range(len(colors)):
-
-      r, g, b = colors[c]
-      curses.init_color(c + 1, r, g, b)
-      curses.init_pair(c + 1, c, c + 1)
-
+    self.seq = map(chr, range(97, 123))
+    self.h = len(self.script)
+    self.w = len(self.script[0])
     self.area = curses.newpad(self.h, self.w)
     self.area.timeout(rate)
 
+    curses.init_color(1, bg[0], bg[1], bg[2])
+    curses.init_color(2, fg[0], fg[1], fg[2])
+    curses.init_pair(2, 1, 2)
+    os.system('setfont ' + font + '.psf')
+
   def update(self):
 
-    for i in range(1, self.h):
-
-      line = list(self.script[i].rstrip())
-
-      for l in range(len(line)):
-
-        self.area.addstr(i - 1, l, line[l], curses.color_pair(2))
-
-        for cell in [g.rstrip() for g in self.seqs if line[l] in g]:
-
-          if cell.index(line[l]) < len(cell) - 1: n = cell[cell.index(line[l]) + 1]
-          else: n = cell[0]
-
-          line[l] = n
-
-      self.script[i] = ''.join(line)
+    for y in range(self.h - 1):
+      for x in range(len(self.script[y]) - 1):
+        index = self.seq.index(self.script[y][x])
+        self.area.addstr(y, x, self.script[y][x], curses.color_pair(2))
+        self.script[y][x] = self.seq[index + 1] if index < len(self.seq) - 1 else self.seq[0]
 
     a = (self.h - height) / 2
     b = (self.w - width) / 2
@@ -70,7 +53,6 @@ class carto:
     d = max(0, (width - self.w) / 2)
     e = min(height, (height + self.h) / 2) - 1
     f = min(width ,(width + self.w) / 2) - 1
-
     self.area.refresh(a, b, c, d, e, f)
 
 m = carto()
@@ -78,17 +60,14 @@ m = carto()
 def main(stdscr):
 
   curses.curs_set(0)
-
   m.load()
 
   while True:
-
     m.update()
     k = m.area.getch()
     if k == ord('q'): break
 
   curses.curs_set(1)
-
   os.system('setupcon')
 
 curses.wrapper(main)

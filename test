@@ -1,11 +1,9 @@
-(60, 'fade')
-ahahahahah
-hahahahaha
-ahahahahah
-hahahahaha
-ahahahahah
-hahahahaha
-ahahahahah
-hahahahaha
-ahahahahah
-hahahahaha
+('fade', 30, (500, 1000, 125), (125, 250, 500))
+abcdefgh
+bcdefghg
+cdefghgf
+defghgfe
+efghgfed
+fghgfedc
+ghgfedcb
+hgfedcba
