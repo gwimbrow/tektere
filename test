@@ -1,9 +1,15 @@
-('fade', 30, (500, 1000, 125), (125, 250, 500))
-abcdefgh
-bcdefghg
-cdefghgf
-defghgfe
-efghgfed
-fghgfedc
-ghgfedcb
-hgfedcba
+('test', 30, (500, 1000, 125), (125, 250, 500))
+abcdefghijklmnopqrstuvwxyz
+bcdefghijklmnopqrstuvwxyza
+cdefghijklmnopqrstuvwxyzab
+defghijklmnopqrstuvwxyzabc
+efghijklmnopqrstuvwxyzabcd
+fghijklmnopqrstuvwxyzabcde
+ghijklmnopqrstuvwxyzabcdef
+hijklmnopqrstuvwxyzabcdefg
+ijklmnopqrstuvwxyzabcdefgh
+jklmnopqrstuvwxyzabcdefgh
+klmnopqrstuvwxyzabcdefgh
+lmnopqrstuvwxyzabcdefgh
+mnopqrstuvwxyzabcdefgh
+nopqrstuvwxyzabcdefgh
